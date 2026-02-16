@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+data/combined_call_logs.csv
+data/weekly_data.csv
+reports/
