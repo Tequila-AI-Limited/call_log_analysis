@@ -72,7 +72,9 @@ def generate_report():
         # Apply overrides
         results['metrics']['week2_calls'] = hist_total
         results['metrics']['week2_retail_total'] = hist_retail
+        results['metrics']['week2_retail_calls'] = hist_retail
         results['metrics']['week2_trade_total'] = hist_trade
+        results['metrics']['week2_trade_calls'] = hist_trade
         
         # Apply Abandoned Split
         results['metrics']['week2_retail_abandoned'] = hist_abandoned_retail

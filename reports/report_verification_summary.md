@@ -1,52 +1,52 @@
 # Report Verification Summary
-**Date:** 2026-02-10 17:56:52
+**Date:** 2026-03-18 12:17:17
 
 ## 1. Data Integrity Checks
 - [x] **Arithmetic Consistency**: PASSED (All sub-components sum correctly to totals)
 - [x] **Week Definitions**: Verified (No overlap)
-  - This Week: 2026-02-02 to 2026-02-08
-  - Last Week: 2026-01-26 to 2026-02-01
+  - This Week: 2026-03-09 to 2026-03-15
+  - Last Week: 2026-03-02 to 2026-03-08
 
 ## 2. Cross-Section Verification
 Ensuring numbers displayed in Data Cards match the Executive Summary and Plots.
 | Metric | Data Cards | Exec Summary | Plot (Day Breakdown) | Status |
 |---|---|---|---|---|
-| This Week Total | 2355 | 2355 | 2355 | ✅ MATCH |
-| This Week Retail | 1733 | 1733 | 1733 | ✅ MATCH |
-| This Week Trade | 389 | 389 | 389 | ✅ MATCH |
-| This Week Abandoned | 233 | 233 | 233 | ✅ MATCH |
-| Last Week Total | 2598 | 2598 | 2598 | ✅ MATCH |
-| Last Week Retail | 1862 | 1862 | 1862 | ✅ MATCH |
-| Last Week Trade | 437 | 437 | 437 | ✅ MATCH |
-| Last Week Abandoned | 299 | 299 | 299 | ✅ MATCH |
+| This Week Total | 2380 | 2380 | 2380 | ✅ MATCH |
+| This Week Retail | 1737 | 1737 | 1737 | ✅ MATCH |
+| This Week Trade | 437 | 437 | 437 | ✅ MATCH |
+| This Week Abandoned | 206 | 206 | 206 | ✅ MATCH |
+| Last Week Total | 2555 | 2555 | 2555 | ✅ MATCH |
+| Last Week Retail | 1846 | 1846 | 1846 | ✅ MATCH |
+| Last Week Trade | 444 | 444 | 444 | ✅ MATCH |
+| Last Week Abandoned | 265 | 265 | 265 | ✅ MATCH |
 
 ## 3. Abandoned Calls by Day of Week Plot Verification
 Verifying that the sum of the days in the 'Abandoned Calls by Day of Week' plot equals the total abandoned calls reported.
-- **This Week Plot Total**: 233
-- **This Week Report Total**: 233
+- **This Week Plot Total**: 206
+- **This Week Report Total**: 206
 - **Status**: ✅ MATCH
 
 ## 4. Report Metrics Breakdown
 ### THIS WEEK
-Uses Main Log (2026-02-02 to 2026-02-08) + Abandoned Log (2026-02-02 to 2026-02-08)
+Uses Main Log (2026-03-09 to 2026-03-15) + Abandoned Log (2026-03-09 to 2026-03-15)
 
-**Retail:** 1,733
-**Trade:** 389
-**Abandoned:** 233
-**TOTAL:** 2,355
-**Calculation Verified:** 1,733 + 389 + 233 = 2,355 ✓
+**Retail:** 1,737
+**Trade:** 437
+**Abandoned:** 206
+**TOTAL:** 2,380
+**Calculation Verified:** 1,737 + 437 + 206 = 2,380 ✓
 
 ### LAST WEEK
-Uses Main Log (2026-01-26 to 2026-02-01) + Abandoned Log (2026-01-26 to 2026-02-01)
+Uses Main Log (2026-03-02 to 2026-03-08) + Abandoned Log (2026-03-02 to 2026-03-08)
 
-**Retail:** 1,862
-**Trade:** 437
-**Abandoned:** 299
-**TOTAL:** 2,598
-**Calculation Verified:** 1,862 + 437 + 299 = 2,598 ✓
+**Retail:** 1,846
+**Trade:** 444
+**Abandoned:** 265
+**TOTAL:** 2,555
+**Calculation Verified:** 1,846 + 444 + 265 = 2,555 ✓
 
 ### OVERALL TOTAL
-**4,953 calls** (2,355 + 2,598)
+**4,935 calls** (2,380 + 2,555)
 
 ## 5. Historical Consistency Check
 ✅ **Consistent** (Matches historical records for this period)

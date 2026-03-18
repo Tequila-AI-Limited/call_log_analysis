@@ -1,0 +1,16 @@
+﻿Queue,Agent,Total Logged In Time,Calls Answered,% Calls Serviced,Calls Answered Per Hour,Ring Time Total,Ring Time Mean,Talk Time Total,Talk Time Mean
+501 Sales Queue,000 Wall Board,00:00:00,0,0%,0,00:00:00,00:00:00,00:00:00,00:00:00
+501 Sales Queue,203 Amrish Sumrath,00:00:00,256,100%,2,00:00:00,00:00:00,10:56:02,00:02:34
+501 Sales Queue,204 Tohill Gerard,668:15:22,2884,25%,6,88:04:11,00:00:28,56:12:52,00:01:10
+501 Sales Queue,206 Griffin Gordon,10:19:37,227,68%,2,01:46:17,00:00:19,08:44:30,00:02:19
+501 Sales Queue,207 McEndoo Mark,1271:00:04,344,4%,2,90:00:34,00:00:42,09:55:29,00:01:44
+501 Sales Queue,208 Sales N,534:48:28,1403,18%,4,71:36:25,00:00:32,55:54:00,00:02:23
+501 Sales Queue,209 Carey David,534:51:24,2239,27%,7,68:20:39,00:00:30,109:39:53,00:02:56
+501 Sales Queue,210 Sales SalesPos 1,00:08:01,0,0%,0,00:00:00,00:00:00,00:00:00,00:00:00
+501 Sales Queue,211 Darragh Leavy,720:19:29,2855,27%,8,75:43:30,00:00:26,84:46:58,00:01:47
+501 Sales Queue,213 Abu Nihal,05:37:09,248,91%,1,00:20:49,00:00:05,10:09:06,00:02:27
+501 Sales Queue,216 Colin McCormac,00:00:00,0,0%,0,00:00:00,00:00:00,00:00:00,00:00:00
+501 Sales Queue,217 Joe Gorman,1030:44:01,131,2%,1,76:02:39,00:00:37,05:06:49,00:02:21
+501 Sales Queue,220 Collier Bernard,13:49:04,1,1%,1,01:31:40,00:00:33,00:00:46,00:00:46
+501 Sales Queue,221 Sales Pos 5,1203:20:03,2635,30%,7,76:01:31,00:00:31,92:30:22,00:02:06
+Totals,,5993:12:42,13223,28%,2,549:28:15,00:00:20,443:56:47,00:01:36
