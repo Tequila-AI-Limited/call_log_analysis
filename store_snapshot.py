@@ -5,15 +5,20 @@ Stores metrics from each report run to enable historical comparisons.
 import psycopg2
 from datetime import datetime, date
 import pandas as pd
+import os
+from dotenv import load_dotenv
 
-# Database configuration (same as ingest_data.py)
+# Load environment variables
+load_dotenv()
+
+# Database configuration (loaded from .env)
 DB_CONFIG = {
-    'host': 'kmc.tequila-ai.com',
-    'port': '5432',
-    'database': 'tequila_ai_reporting',
-    'user': 'james',
-    'password': ']dT1H-{ekquGfn^6',
-    'sslmode': 'require'
+    'host': os.getenv('DB_HOST'),
+    'port': os.getenv('DB_PORT'),
+    'database': os.getenv('DB_NAME'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'sslmode': os.getenv('DB_SSLMODE', 'require')
 }
 
 def get_db_connection():

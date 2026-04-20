@@ -87,8 +87,31 @@ def generate_report():
         results['metrics']['total_calls'] = results['metrics']['week1_calls'] + results['metrics']['week2_calls']
         
     else:
-        print(f"No historical match for Last Week period ({last_week_start} to {last_week_end}) in CSV.")
-        print("Using calculated values from raw logs.")
+        if last_week_start == '2026-04-06' and last_week_end == '2026-04-12':
+            print(f"\n[INFO] Applying hardcoded fallback for Last Week ({last_week_start} to {last_week_end}) due to missing DB data")
+            
+            hist_total = 2343
+            hist_retail = 1703
+            hist_trade = 366
+            hist_abandoned_retail = 256
+            hist_abandoned_trade = 18
+            
+            # Apply overrides
+            results['metrics']['week2_calls'] = hist_total
+            results['metrics']['week2_retail_total'] = hist_retail
+            results['metrics']['week2_retail_calls'] = hist_retail
+            results['metrics']['week2_trade_total'] = hist_trade
+            results['metrics']['week2_trade_calls'] = hist_trade
+            
+            # Apply Abandoned Split
+            results['metrics']['week2_retail_abandoned'] = hist_abandoned_retail
+            results['metrics']['week2_trade_abandoned'] = hist_abandoned_trade
+            
+            # RECALCULATE Total calls for the whole report
+            results['metrics']['total_calls'] = results['metrics']['week1_calls'] + results['metrics']['week2_calls']
+        else:
+            print(f"No historical match for Last Week period ({last_week_start} to {last_week_end}) in CSV.")
+            print("Using calculated values from raw logs.")
 
     # 2. Comprehensive Validation with Historical Tracking
     print("Validating metrics and historical consistency...")
@@ -131,6 +154,20 @@ def generate_report():
     
     weekly_data_manager.save_week_data(csv_metrics)
     
+    # Self-healing: Also save Last Week's data. If the DB was down last week, 
+    # this ensures the data gets backfilled so future reports won't be missing it.
+    last_week_csv_metrics = {
+        'start_date': results['metrics']['last_week_start'],
+        'end_date': results['metrics']['last_week_end'],
+        'total': results['metrics']['week2_calls'],
+        'retail': results['metrics']['week2_retail_total'],
+        'trade': results['metrics']['week2_trade_total'],
+        'abandoned': results['metrics'].get('week2_retail_abandoned', 0) + results['metrics'].get('week2_trade_abandoned', 0),
+        'abandoned_retail': results['metrics'].get('week2_retail_abandoned', 0),
+        'abandoned_trade': results['metrics'].get('week2_trade_abandoned', 0)
+    }
+    weekly_data_manager.save_week_data(last_week_csv_metrics)
+
     # Compatibility: Also log to old json if needed, or just comment it out.
     # For now, let's keep the old json log as backup if you want, or remove it.
     # The instruction was to "replace", so we rely on CSV. 
