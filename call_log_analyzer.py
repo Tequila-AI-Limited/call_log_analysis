@@ -14,53 +14,67 @@ DB_CONFIG = {
     'port': os.getenv('DB_PORT', '5432'),
     'database': os.getenv('DB_NAME', 'tequila_ai_reporting'),
     'user': os.getenv('DB_USER', 'james'),
-    'password': os.getenv('DB_PASSWORD', ']dT1H-{ekquGfn^6'),
+    'password': os.getenv('DB_PASSWORD'),
     'sslmode': os.getenv('DB_SSLMODE', 'require')
 }
 
 def save_to_database(df, table_name='call_logs'):
-    """Save DataFrame to PostgreSQL database."""
+    """Save DataFrame to PostgreSQL database using upsert on Call ID to preserve history."""
     try:
         print(f"Connecting to database to save {len(df)} rows...")
         conn = psycopg2.connect(**DB_CONFIG)
         cursor = conn.cursor()
-        
-        # Create table if not exists (simplified schema)
-        # We'll drop and recreate for this weekly job to ensure schema matches
-        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-        
-        # Generate CREATE TABLE statement based on DataFrame columns
-        cols = []
-        for col in df.columns:
-            dtype = df[col].dtype
-            if pd.api.types.is_integer_dtype(dtype):
-                sql_type = 'INTEGER'
-            elif pd.api.types.is_float_dtype(dtype):
-                sql_type = 'NUMERIC'
-            elif pd.api.types.is_bool_dtype(dtype):
-                sql_type = 'BOOLEAN'
-            elif pd.api.types.is_datetime64_any_dtype(dtype):
-                sql_type = 'TIMESTAMP'
-            else:
-                sql_type = 'TEXT'
-            cols.append(f'"{col}" {sql_type}')
-        
-        create_sql = f"CREATE TABLE {table_name} (id SERIAL PRIMARY KEY, {', '.join(cols)});"
-        cursor.execute(create_sql)
-        
-        # Insert data
-        columns = [f'"{col}"' for col in df.columns]
-        values = [tuple(x) for x in df.to_numpy()]
-        
-        insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES %s"
+
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                "Call ID" TEXT PRIMARY KEY,
+                call_start TIMESTAMP,
+                from_number TEXT,
+                to_number TEXT,
+                directions TEXT,
+                statuses TEXT,
+                ringing_total_sec INTEGER,
+                talking_total_sec INTEGER,
+                customer_type TEXT,
+                call_activity_details TEXT,
+                is_answered BOOLEAN,
+                is_abandoned BOOLEAN,
+                date DATE,
+                day_name TEXT,
+                week INTEGER,
+                week_start DATE
+            );
+        """)
+
+        db_cols = [
+            'Call ID', 'call_start', 'from_number', 'to_number',
+            'directions', 'statuses', 'ringing_total_sec', 'talking_total_sec',
+            'customer_type', 'call_activity_details', 'is_answered', 'is_abandoned',
+            'date', 'day_name', 'week', 'week_start'
+        ]
+        quoted_cols = [f'"{c}"' for c in db_cols]
+        values = [tuple(x) for x in df[db_cols].to_numpy()]
+
+        update_set = ', '.join(
+            f'{q} = EXCLUDED.{q}' for q in quoted_cols if q != '"Call ID"'
+        )
+        insert_sql = f"""
+            INSERT INTO {table_name} ({', '.join(quoted_cols)})
+            VALUES %s
+            ON CONFLICT ("Call ID") DO UPDATE SET {update_set}
+        """
         execute_values(cursor, insert_sql, values)
-        
+
         conn.commit()
-        print(f"Successfully saved data to table '{table_name}'.")
-        
+        print(f"Successfully saved {len(df)} rows to table '{table_name}'.")
+
     except Exception as e:
         print(f"Error saving to database: {e}")
+        if 'conn' in locals():
+            conn.rollback()
     finally:
+        if 'cursor' in locals():
+            cursor.close()
         if 'conn' in locals():
             conn.close()
 
@@ -281,7 +295,10 @@ def generate_plots(df, abandoned_df):
         main_df['day_of_week'] = main_df['call_start'].dt.day_name()
         
         days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        
+
+        week1_abd_data = pd.DataFrame()
+        week2_abd_data = pd.DataFrame()
+
         for week in [1, 2]:
             # Main Data
             week_main = main_df[main_df['week'] == week]
@@ -351,8 +368,7 @@ def generate_plots(df, abandoned_df):
                 ])
             
             week_label = get_week_label_display(week)
-            all_calls_df = df # For the conditional check in the template string
-            
+
             fig_abandoned.add_trace(go.Bar(
                 name=week_label,
                 x=days_order,
@@ -363,9 +379,9 @@ def generate_plots(df, abandoned_df):
                     "Day: %{x}<br>"
                     f"{week_label}<br>"
                     "Abandoned Calls: %{y}<br>"
-                    + ("Answered Calls: %{customdata[1]}<br>" if all_calls_df is not None else "") +
-                    ("Voicemail/Other: %{customdata[6]}<br>" if all_calls_df is not None else "") +
-                    ("Total Calls: %{customdata[0]}<br>" if all_calls_df is not None else "") +
+                    "Answered Calls: %{customdata[1]}<br>"
+                    "Voicemail/Other: %{customdata[6]}<br>"
+                    "Total Calls: %{customdata[0]}<br>"
                     "Min Wait: %{customdata[3]}<br>"
                     "Average Wait: %{customdata[4]}<br>"
                     "Max Wait: %{customdata[5]}<extra></extra>"
@@ -405,10 +421,10 @@ def generate_plots(df, abandoned_df):
     # --- Annotation ---
     if not abandoned_df.empty:
         # Recalculate global stats for annotation
-        w1_mean = week1_abd_data['wait_sec'].mean() if 'week1_abd_data' in locals() and not week1_abd_data.empty else 0
-        w2_mean = week2_abd_data['wait_sec'].mean() if 'week2_abd_data' in locals() and not week2_abd_data.empty else 0
-        w1_count = len(week1_abd_data) if 'week1_abd_data' in locals() else 0
-        w2_count = len(week2_abd_data) if 'week2_abd_data' in locals() else 0
+        w1_mean = week1_abd_data['wait_sec'].mean() if not week1_abd_data.empty else 0
+        w2_mean = week2_abd_data['wait_sec'].mean() if not week2_abd_data.empty else 0
+        w1_count = len(week1_abd_data)
+        w2_count = len(week2_abd_data)
         
         # Dynamic Y
         max_y = 10
@@ -528,6 +544,20 @@ def analyze_abandoned_calls(abandoned_df, main_df):
     return metrics
 
 import re
+
+def clean_phone_for_match(phone):
+    """Normalize a phone number string for matching (strips country prefix and leading zero)."""
+    s = str(phone).strip()
+    s = s.replace(' ', '').replace('-', '').replace('.', '').replace('(', '').replace(')', '')
+    if s.startswith('+353'):
+        s = s[4:]
+    elif s.startswith('00353'):
+        s = s[5:]
+    elif s.startswith('353'):
+        s = s[3:]
+    if s.startswith('0'):
+        s = s[1:]
+    return s
 
 def analyze_journey(main_df, abandoned_df):
     """Analyze caller journey including Queue, Voicemail, OOO, and Termination."""
@@ -771,22 +801,6 @@ def analyze_calls(data_dir='data'):
     
     # 3a. Assign customer type to abandoned_df BEFORE calculating weekly metrics
     if not abandoned_df.empty:
-        # Helper to clean phone numbers for matching
-        def clean_phone_for_match(phone):
-            s = str(phone).strip()
-            # Remove formatting chars first
-            s = s.replace(' ', '').replace('-', '').replace('.', '').replace('(', '').replace(')', '')
-            
-            # Handle prefixes
-            if s.startswith('+353'): s = s[4:]
-            elif s.startswith('00353'): s = s[5:]
-            elif s.startswith('353'): s = s[3:]
-            
-            # Strip leading zero to ensure match between int (87...) and str (087...)
-            if s.startswith('0'): s = s[1:]
-            
-            return s
-
         # Get set of known trade numbers from main log (cleaned)
         # Filter out anonymous and empty strings
         trade_numbers = set(
@@ -941,10 +955,13 @@ def analyze_calls(data_dir='data'):
         'week1_trade_abandoned': week1_trade_abd,
         'week2_retail_abandoned': week2_retail_abd,
         'week2_trade_abandoned': week2_trade_abd,
-        
+
+        'week1_abandoned_total': week1_retail_abd + week1_trade_abd,
+        'week2_abandoned_total': week2_retail_abd + week2_trade_abd,
+
         'retail_abandoned': total_retail_abd,
         'trade_abandoned': total_trade_abd,
-        
+
         # Combined totals - USER REQUEST: Exclude abandoned from Retail/Trade display metrics
         'week1_retail_total': len(week1_retail),
         'week1_trade_total': len(week1_trade),
@@ -1014,16 +1031,6 @@ def analyze_calls(data_dir='data'):
             try:
                 trade_df = pd.read_csv(trade_names_path)
                 if 'phone_number' in trade_df.columns and 'customer_name' in trade_df.columns:
-                    # Clean phone numbers for matching
-                    def clean_phone_for_match(phone):
-                        s = str(phone).strip()
-                        s = s.replace(' ', '').replace('-', '').replace('.', '').replace('(', '').replace(')', '')
-                        if s.startswith('+353'): s = s[4:]
-                        elif s.startswith('00353'): s = s[5:]
-                        elif s.startswith('353'): s = s[3:]
-                        if s.startswith('0'): s = s[1:]
-                        return s
-                    
                     for _, row in trade_df.iterrows():
                         cleaned_num = clean_phone_for_match(row['phone_number'])
                         trade_names_map[cleaned_num] = row['customer_name']

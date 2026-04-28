@@ -87,6 +87,9 @@ def generate_report():
         results['metrics']['total_calls'] = results['metrics']['week1_calls'] + results['metrics']['week2_calls']
         
     else:
+        # HARDCODED FALLBACK: only applies to the specific week of 2026-04-06 to 2026-04-12.
+        # This block will never trigger for any other week. Remove once that week's data
+        # is in the DB so load_week_data() returns it instead.
         if last_week_start == '2026-04-06' and last_week_end == '2026-04-12':
             print(f"\n[INFO] Applying hardcoded fallback for Last Week ({last_week_start} to {last_week_end}) due to missing DB data")
             
@@ -116,8 +119,6 @@ def generate_report():
     # 2. Comprehensive Validation with Historical Tracking
     print("Validating metrics and historical consistency...")
     from validate_historical import validate_report
-    from validate_historical import validate_report
-    # from historical_log import log_week_metrics # Deprecated
     from datetime import datetime
     
     # Save verification summary to Markdown file
@@ -137,10 +138,12 @@ def generate_report():
         print("Validation summary saved to: reports/report_verification_summary.md")
         return
     
-    # 3. Log Historical Week Data to CSV
-    print("\nLogging 'This Week' data to CSV database...")
-    
-    # Prepare metrics dict for CSV
+    # Collect non-fatal warnings to surface in the final summary
+    warnings = []
+
+    # 3. Log Historical Week Data to DB
+    print("\nLogging 'This Week' data to DB...")
+
     csv_metrics = {
         'start_date': results['metrics']['this_week_start'],
         'end_date': results['metrics']['this_week_end'],
@@ -151,11 +154,13 @@ def generate_report():
         'abandoned_retail': results['metrics'].get('week1_retail_abandoned', 0),
         'abandoned_trade': results['metrics'].get('week1_trade_abandoned', 0)
     }
-    
-    weekly_data_manager.save_week_data(csv_metrics)
-    
-    # Self-healing: Also save Last Week's data. If the DB was down last week, 
-    # this ensures the data gets backfilled so future reports won't be missing it.
+
+    try:
+        weekly_data_manager.save_week_data(csv_metrics)
+    except Exception as e:
+        warnings.append(f"DB weekly stats (This Week) NOT saved: {e}")
+
+    # Self-healing: also save Last Week so future reports can load it if they missed it
     last_week_csv_metrics = {
         'start_date': results['metrics']['last_week_start'],
         'end_date': results['metrics']['last_week_end'],
@@ -166,13 +171,11 @@ def generate_report():
         'abandoned_retail': results['metrics'].get('week2_retail_abandoned', 0),
         'abandoned_trade': results['metrics'].get('week2_trade_abandoned', 0)
     }
-    weekly_data_manager.save_week_data(last_week_csv_metrics)
 
-    # Compatibility: Also log to old json if needed, or just comment it out.
-    # For now, let's keep the old json log as backup if you want, or remove it.
-    # The instruction was to "replace", so we rely on CSV. 
-    # But I'll leave the old import unused or remove it.
-    # Removing old json logging block completely.
+    try:
+        weekly_data_manager.save_week_data(last_week_csv_metrics)
+    except Exception as e:
+        warnings.append(f"DB weekly stats (Last Week) NOT saved: {e}")
 
     # 4. Store Historical Snapshot (database)
     print("Storing database snapshot...")
@@ -180,7 +183,7 @@ def generate_report():
         create_snapshot_table()
         store_snapshot(results['metrics'])
     except Exception as e:
-        print(f"Warning: Could not store snapshot: {e}")
+        warnings.append(f"DB snapshot NOT saved: {e}")
 
     # 5. Setup Jinja2 Environment
     env = Environment(loader=FileSystemLoader('templates'))
@@ -275,11 +278,21 @@ def generate_report():
             f.write(html_output)
         print(f"Report generated successfully: {output_path}")
         print("\n" + "="*60)
-        print("SUCCESS: Report validated and ready for stakeholders!")
-        print("Detailed verification summary saved to: reports/report_verification_summary.md")
+        if warnings:
+            print("REPORT GENERATED — WITH WARNINGS")
+        else:
+            print("SUCCESS: Report validated and ready for stakeholders!")
         print("="*60)
         print(f"This Week: {csv_metrics['start_date']} to {csv_metrics['end_date']} ({csv_metrics['total']} calls)")
         print(f"Last Week: {results['metrics']['last_week_start']} to {results['metrics']['last_week_end']} ({results['metrics']['week2_calls']} calls)")
+        print(f"Report:    {output_path}")
+        print(f"Verify:    reports/report_verification_summary.md")
+        if warnings:
+            print("\n" + "!"*60)
+            print(f"  {len(warnings)} NON-FATAL WARNING(S) — report is valid but check these:")
+            for w in warnings:
+                print(f"  - {w}")
+            print("!"*60)
         print("="*60)
             
     except Exception as e:

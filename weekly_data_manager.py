@@ -65,9 +65,10 @@ def initialize_db():
         conn.commit()
         # print(f"Initialized weekly data table '{TABLE_NAME}' in database.")
     except Exception as e:
-        print(f"Error initializing database table: {e}")
+        raise
     finally:
-        cursor.close()
+        if 'cursor' in locals():
+            cursor.close()
         conn.close()
 
 def load_week_data(start_date, end_date):
@@ -161,14 +162,13 @@ def save_week_data(metrics):
     
     conn = get_db_connection()
     if not conn:
-        print("Failed to connect to DB for saving.")
-        return
+        raise ConnectionError("Could not connect to database")
 
     try:
         cursor = conn.cursor()
-        
+
         upsert_sql = f"""
-        INSERT INTO {TABLE_NAME} 
+        INSERT INTO {TABLE_NAME}
         (week_start, week_end, total_calls, retail_calls, trade_calls, abandoned_total, retail_abandoned, trade_abandoned, report_generated_date)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (week_start, week_end) DO UPDATE SET
@@ -180,7 +180,7 @@ def save_week_data(metrics):
             trade_abandoned = EXCLUDED.trade_abandoned,
             report_generated_date = EXCLUDED.report_generated_date;
         """
-        
+
         values = (
             start_date,
             end_date,
@@ -192,16 +192,17 @@ def save_week_data(metrics):
             metrics.get('abandoned_trade', 0),
             datetime.now()
         )
-        
+
         cursor.execute(upsert_sql, values)
         conn.commit()
         print(f"Saved weekly data for {start_date} - {end_date} to Database.")
 
     except Exception as e:
-        print(f"Error saving to DB: {e}")
         conn.rollback()
+        raise
     finally:
-        cursor.close()
+        if 'cursor' in locals():
+            cursor.close()
         conn.close()
 
 def get_all_weeks():

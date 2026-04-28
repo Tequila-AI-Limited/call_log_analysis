@@ -83,11 +83,14 @@ def store_snapshot(metrics, report_date=None):
         cursor.execute("""
             INSERT INTO report_snapshots (
                 report_date, week_number, week_label,
+                week_start_date, week_end_date,
                 total_calls, retail_calls, trade_calls,
                 abandoned_calls, abandonment_rate,
                 retail_abandonment_rate, trade_abandonment_rate
-            ) VALUES (%s, 1, 'This Week', %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, 1, 'This Week', %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (report_date, week_number) DO UPDATE SET
+                week_start_date = EXCLUDED.week_start_date,
+                week_end_date = EXCLUDED.week_end_date,
                 total_calls = EXCLUDED.total_calls,
                 retail_calls = EXCLUDED.retail_calls,
                 trade_calls = EXCLUDED.trade_calls,
@@ -97,24 +100,29 @@ def store_snapshot(metrics, report_date=None):
                 trade_abandonment_rate = EXCLUDED.trade_abandonment_rate
         """, (
             report_date,
+            metrics.get('this_week_start'),
+            metrics.get('this_week_end'),
             metrics['week1_calls'],
             metrics['week1_retail_total'],
             metrics['week1_trade_total'],
             metrics['week1_retail_abandoned'] + metrics['week1_trade_abandoned'],
-            metrics['abandonment_rate'],
+            metrics.get('week1_abandonment_rate', metrics['abandonment_rate']),
             metrics['week1_retail_abandonment_rate'],
             metrics['week1_trade_abandonment_rate']
         ))
-        
+
         # Store Week 2 (Last Week)
         cursor.execute("""
             INSERT INTO report_snapshots (
                 report_date, week_number, week_label,
+                week_start_date, week_end_date,
                 total_calls, retail_calls, trade_calls,
                 abandoned_calls, abandonment_rate,
                 retail_abandonment_rate, trade_abandonment_rate
-            ) VALUES (%s, 2, 'Last Week', %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, 2, 'Last Week', %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (report_date, week_number) DO UPDATE SET
+                week_start_date = EXCLUDED.week_start_date,
+                week_end_date = EXCLUDED.week_end_date,
                 total_calls = EXCLUDED.total_calls,
                 retail_calls = EXCLUDED.retail_calls,
                 trade_calls = EXCLUDED.trade_calls,
@@ -124,11 +132,13 @@ def store_snapshot(metrics, report_date=None):
                 trade_abandonment_rate = EXCLUDED.trade_abandonment_rate
         """, (
             report_date,
+            metrics.get('last_week_start'),
+            metrics.get('last_week_end'),
             metrics['week2_calls'],
             metrics['week2_retail_total'],
             metrics['week2_trade_total'],
             metrics['week2_retail_abandoned'] + metrics['week2_trade_abandoned'],
-            metrics['abandonment_rate'],
+            metrics.get('week2_abandonment_rate', metrics['abandonment_rate']),
             metrics['week2_retail_abandonment_rate'],
             metrics['week2_trade_abandonment_rate']
         ))

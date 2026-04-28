@@ -287,3 +287,7 @@ IMAP_USER=smf_ingestion@tequila-ai.com
 | `report_snapshots` | Exists (persists) | Now populates week_start/end |
 | `weekly_metrics` | Exists (persists) | Keyed on (week_start_date, week_end_date) |
 | `clientlist` | Exists (external reference) | Used for trade number lookup |
+
+
+## Coding 
+Codex will review your output once you are done.
