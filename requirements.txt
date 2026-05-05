@@ -1,0 +1,10 @@
+pandas
+numpy
+plotly
+jinja2
+psycopg2-binary
+python-dotenv
+msal
+requests
+openpyxl
+sqlalchemy

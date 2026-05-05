@@ -26,7 +26,7 @@ Ensure you have Python 3.8+ installed.
     ```
 2.  Install dependencies:
     ```bash
-    pip install pandas plotly jinja2 psycopg2-binary
+    pip install -r requirements.txt
     ```
     *(Note: `psycopg2` is optional if you are not using the database snapshot feature).*
 

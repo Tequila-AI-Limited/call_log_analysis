@@ -3,10 +3,15 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import execute_values
 import os
+from dotenv import load_dotenv
 from cleaning import run_cleaning
 import glob
+
+# Load environment variables
+load_dotenv()
 
 # Database Configuration
 DB_CONFIG = {
@@ -17,6 +22,63 @@ DB_CONFIG = {
     'password': os.getenv('DB_PASSWORD'),
     'sslmode': os.getenv('DB_SSLMODE', 'require')
 }
+
+def ensure_call_id_conflict_target(cursor, table_name):
+    """Ensure existing call log tables support ON CONFLICT ("Call ID")."""
+    table_ident = sql.Identifier(table_name)
+    cursor.execute(
+        """
+        SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+              ON tc.constraint_name = kcu.constraint_name
+             AND tc.constraint_schema = kcu.constraint_schema
+            WHERE tc.table_name = %s
+              AND kcu.column_name = 'Call ID'
+              AND tc.constraint_type IN ('PRIMARY KEY', 'UNIQUE')
+        );
+        """,
+        (table_name,),
+    )
+    if cursor.fetchone()[0]:
+        return
+
+    cursor.execute(
+        sql.SQL('SELECT COUNT(*) FROM {} WHERE "Call ID" IS NULL;').format(table_ident)
+    )
+    null_count = cursor.fetchone()[0]
+    if null_count:
+        raise ValueError(
+            f'Cannot add unique constraint to {table_name}: {null_count} rows have null Call ID.'
+        )
+
+    cursor.execute(
+        sql.SQL(
+            """
+        SELECT "Call ID", COUNT(*)
+        FROM {}
+        GROUP BY "Call ID"
+        HAVING COUNT(*) > 1
+        LIMIT 5;
+        """
+        ).format(table_ident)
+    )
+    duplicates = cursor.fetchall()
+    if duplicates:
+        sample = ', '.join(str(row[0]) for row in duplicates)
+        raise ValueError(
+            f'Cannot add unique constraint to {table_name}: duplicate Call ID values exist. '
+            f'Examples: {sample}'
+        )
+
+    constraint_name = f'{table_name}_call_id_unique'
+    cursor.execute(
+        sql.SQL('ALTER TABLE {} ADD CONSTRAINT {} UNIQUE ("Call ID");').format(
+            table_ident,
+            sql.Identifier(constraint_name),
+        )
+    )
 
 def save_to_database(df, table_name='call_logs'):
     """Save DataFrame to PostgreSQL database using upsert on Call ID to preserve history."""
@@ -45,6 +107,7 @@ def save_to_database(df, table_name='call_logs'):
                 week_start DATE
             );
         """)
+        ensure_call_id_conflict_target(cursor, table_name)
 
         db_cols = [
             'Call ID', 'call_start', 'from_number', 'to_number',

@@ -88,9 +88,11 @@ Week assignment uses `dt > (max_date - 7 days)` (exclusive), metric filtering us
 | `report_snapshots` | `store_snapshot.py` | UPSERT on (report_date, week_number) | FIXED - now populates week_start_date/week_end_date |
 | `weekly_metrics` | `store_snapshot.py` | **UPSERT on (week_start_date, week_end_date)** | NEW - persistent weekly aggregates |
 
-### 4.2 What Was Fixed
+### 4.2 What Was Fixed (Updated 2026-05-05)
 
 1. **`save_to_database()` no longer destroys data** - Uses `CREATE TABLE IF NOT EXISTS` and upserts on `Call ID`. Historical data is preserved across runs.
+   *Note (2026-05-05)*: The script was failing to load DB credentials because it was missing `load_dotenv()`. This has been fixed in `call_log_analyzer.py`.
+   *Note (2026-05-05)*: The Postgres `call_logs` table can be missing a unique constraint on `"Call ID"` in older databases. `call_log_analyzer.py` now validates the existing data and adds the constraint automatically before using the `ON CONFLICT` upsert.
 
 2. **`store_snapshot()` now populates week dates** - The `week_start_date` and `week_end_date` columns are now populated from the metrics dict.
 
@@ -287,7 +289,6 @@ IMAP_USER=smf_ingestion@tequila-ai.com
 | `report_snapshots` | Exists (persists) | Now populates week_start/end |
 | `weekly_metrics` | Exists (persists) | Keyed on (week_start_date, week_end_date) |
 | `clientlist` | Exists (external reference) | Used for trade number lookup |
-
 
 ## Coding 
 Codex will review your output once you are done.
