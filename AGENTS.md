@@ -13,6 +13,18 @@ This is a Python call-center analytics and reporting project. Core pipeline code
 - `sanity/`: executable validation scripts and audit helpers.
 - `reference/`, `sample/`, and `archive/`: comparison material, sample data, and older/debug scripts.
 
+## Critical Architecture Rules
+
+### `generate_plots()` returns charts only — never metrics
+
+`generate_plots()` in `call_log_analyzer.py` returns a single dict containing chart HTML fragments (`{"combined_plot": "<html>..."}`). It does **not** return metric values and must not be changed to do so.
+
+All week-level metrics (retail/trade call counts, abandoned totals, week dates) are computed by `analyze_calls()` in Stage 6 using midnight-normalised date-range boundaries. Those are the single source of truth and are what gets saved to the database and rendered in the report.
+
+This was a recurring bug: twice (Jan 2026 and Feb 2026) an AI assistant "fixed" the function to also return a `plot_derived_metrics` dict and merged it into the main metrics dict with `metrics.update(plot_metrics)`. This silently overwrote the correct date-range values with week-column-based counts that use a different boundary (raw `max_date` timestamp instead of midnight-normalised), causing an ~8-call discrepancy in Last Week totals. The wrong values then propagated to the database, corrupting future historical comparisons.
+
+The metric-accumulation code has been permanently removed from `generate_plots()`. Do not add it back. If you need per-week counts inside the plot function for hover text, read them from the DataFrame directly and keep them local — do not return them.
+
 ## Build, Test, and Development Commands
 
 Install dependencies:

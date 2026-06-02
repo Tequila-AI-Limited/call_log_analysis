@@ -1,56 +1,27 @@
 # Report Verification Summary
-**Date:** 2026-05-22 10:09:50
+**Generated:** 2026-06-02 11:25:13
 
-## 1. Data Integrity Checks
-- [x] **Arithmetic Consistency**: PASSED (All sub-components sum correctly to totals)
-- [x] **Week Definitions**: Verified (No overlap)
-  - This Week: 2026-05-11 to 2026-05-17
-  - Last Week: 2026-05-04 to 2026-05-10
+## 1. Arithmetic Consistency
+- [x] **PASSED** — All sub-components sum correctly to totals.
 
-## 2. Cross-Section Verification
-Ensuring numbers displayed in Data Cards match the Executive Summary and Plots.
-| Metric | Data Cards | Exec Summary | Plot (Day Breakdown) | Status |
-|---|---|---|---|---|
-| This Week Total | 2401 | 2401 | 2401 | ✅ MATCH |
-| This Week Retail | 1634 | 1634 | 1634 | ✅ MATCH |
-| This Week Trade | 407 | 407 | 407 | ✅ MATCH |
-| This Week Abandoned | 360 | 360 | 360 | ✅ MATCH |
-| Last Week Total | 2741 | 2741 | 2741 | ✅ MATCH |
-| Last Week Retail | 1842 | 1842 | 1842 | ✅ MATCH |
-| Last Week Trade | 394 | 394 | 394 | ✅ MATCH |
-| Last Week Abandoned | 505 | 505 | 505 | ✅ MATCH |
+## 2. Date Ranges
+- [x] **PASSED** — No overlap; each week is exactly 7 days.
+  - This Week: 2026-05-25 to 2026-05-31
+  - Last Week: 2026-05-18 to 2026-05-24
 
-## 3. Abandoned Calls by Day of Week Plot Verification
-Verifying that the sum of the days in the 'Abandoned Calls by Day of Week' plot equals the total abandoned calls reported.
-- **This Week Plot Total**: 360
-- **This Week Report Total**: 360
-- **Status**: ✅ MATCH
+## 3. Historical Consistency
+✅ **Consistent** with historical records.
 
-## 4. Report Metrics Breakdown
-### THIS WEEK
-Uses Main Log (2026-05-11 to 2026-05-17) + Abandoned Log (2026-05-11 to 2026-05-17)
+## 4. Metrics Breakdown
+### THIS WEEK (2026-05-25 to 2026-05-31)
+Retail: 1,855 | Trade: 399 | Abandoned: 521 | **Total: 2,775** ✓
 
-**Retail:** 1,634
-**Trade:** 407
-**Abandoned:** 360
-**TOTAL:** 2,401
-**Calculation Verified:** 1,634 + 407 + 360 = 2,401 ✓
-
-### LAST WEEK
-Uses Main Log (2026-05-04 to 2026-05-10) + Abandoned Log (2026-05-04 to 2026-05-10)
-
-**Retail:** 1,842
-**Trade:** 394
-**Abandoned:** 505
-**TOTAL:** 2,741
-**Calculation Verified:** 1,842 + 394 + 505 = 2,741 ✓
+### LAST WEEK (2026-05-18 to 2026-05-24)
+Retail: 1,774 | Trade: 442 | Abandoned: 476 | **Total: 2,692** ✓
 
 ### OVERALL TOTAL
-**5,142 calls** (2,401 + 2,741)
+5,467 calls (2,775 + 2,692)
 
-## 5. Historical Consistency Check
-✅ **Consistent** (Matches historical records for this period)
-
-## 6. Final Result
+## 5. Final Result
 ### ✅ VERIFICATION SUCCESSFUL
-The report is internally consistent.
+The report is internally consistent and ready for distribution.

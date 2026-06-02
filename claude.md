@@ -1,6 +1,6 @@
 # Claude Code Analysis - Call Log Analysis Pipeline
 
-**Date:** 2026-01-27
+**Date:** 2026-06-02 (last updated)
 **Project:** Southside/Omni Call Center Weekly Report Generator
 **Stack:** Python 3, Pandas, Plotly, Jinja2, PostgreSQL, Microsoft Graph API
 
@@ -62,17 +62,21 @@ Previously `generate_plots()` mapped Week 2 (older data) to "This Week" and Week
 
 Previously, abandoned data was cross-wired: when displaying "This Week" it pulled abandoned calls from the opposite data week. Now each displayed week uses its own abandoned data directly: `week_abd = abd[abd['week'] == week]`.
 
-### 3.3 The Metrics Override - FIXED
+### 3.3 The Metrics Override - STRUCTURALLY FIXED (2026-06-02)
 
-Previously `metrics.update(plot_metrics)` overwrote correctly-calculated date-based metrics with swapped plot values. This override has been removed. The metrics calculated by `analyze_calls()` date-based filtering are now the single source of truth. The plot function still generates charts but no longer overrides metrics.
+**History of this bug:** `metrics.update(plot_metrics)` was removed in January 2026, but an AI assistant re-introduced it in February 2026 (commit `ad4b9b3`) because `generate_plots()` still returned a `plot_derived_metrics` dict — making the "merge the second return value" pattern look natural. The bug caused an ~8-call discrepancy in Last Week totals (wrong values propagated to the DB, corrupting future historical comparisons).
+
+**Structural fix (2026-06-02):** All metric-accumulation code has been removed from `generate_plots()`. The function now returns only `{"combined_plot": "<html>..."}` — a single dict, not a tuple. There is no second return value to merge. The call site is `plots = generate_plots(df, abandoned_df)`.
+
+All week-level metrics are computed exclusively in Stage 6 of `analyze_calls()` using midnight-normalised date-range boundaries and are the single source of truth for the report and database.
 
 ### 3.4 Historical Consistency
 
-Previous reports logged inconsistent numbers because the override caused the same calendar week to show different totals. Going forward, with the swap removed, the same calendar week should produce identical numbers whether it appears as "This Week" or "Last Week" in consecutive reports.
+Previous reports logged inconsistent numbers because the override caused the same calendar week to show different totals. Going forward, the same calendar week produces identical numbers whether it appears as "This Week" or "Last Week" in consecutive reports.
 
-### 3.5 Datetime Precision Gap (MINOR - still present)
+### 3.5 Datetime Precision Gap - FIXED (2026-06-02)
 
-Week assignment uses `dt > (max_date - 7 days)` (exclusive), metric filtering uses `call_start >= (max_date - 6 days)` (inclusive). These produce equivalent calendar day ranges when max_date falls at end of day but could differ at sub-day precision. Now that the override is removed, this could cause minor discrepancies between plot bar heights and metric card numbers if max_date has a mid-day timestamp. Consider normalizing max_date to midnight in a future fix.
+`max_date` is now normalised to midnight (`max_date.normalize()`) before computing week boundaries, so all date-range filters use full-day boundaries. Plot bar heights and metric card numbers are derived from the same Stage 6 calculations and will always agree.
 
 ---
 
@@ -203,12 +207,14 @@ The JSON log (`reports/historical_weeks.json`) only appends, never checks for du
 
 ## 7. Implementation Plan - Remaining Work
 
-### Phase 1: Fix Week Logic - DONE (2026-01-27)
+### Phase 1: Fix Week Logic - DONE (2026-01-27, structurally hardened 2026-06-02)
 - [x] Fixed `get_week_label_display()` - Week 1 = "This Week", Week 2 = "Last Week"
 - [x] Fixed loop order to `[1, 2]` and color map to match
 - [x] Fixed `metric_week` mapping to direct `f"week{week}"`
 - [x] Removed abandoned data cross-swap
-- [x] Removed `metrics.update(plot_metrics)` override
+- [x] Removed `metrics.update(plot_metrics)` override (Jan 2026)
+- [x] Removed metric-accumulation from `generate_plots()` entirely — function now returns chart HTML only, no tuple (Jun 2026). Prevents AI assistants from re-introducing the merge.
+- [x] Normalised `max_date` to midnight so date-range boundaries are always full-day aligned (Jun 2026)
 
 ### Phase 2: Persistent Database Storage - DONE (2026-01-27)
 - [x] Created `weekly_metrics` table with `(week_start_date, week_end_date)` as PK

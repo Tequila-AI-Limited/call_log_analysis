@@ -1,306 +1,310 @@
-"""
-Comprehensive Report Validation Module
+"""Report validation module.
 
-Validates report consistency:
-1. Arithmetic: Retail + Trade + Abandoned = Total
-2. Week-to-week historical consistency
-3. No date overlaps between weeks
-"""
-from datetime import datetime, timedelta
+Validates a freshly calculated metrics dict against three criteria before the
+HTML report is written:
 
-def validate_arithmetic(metrics):
-    """
-    Verify that all arithmetic adds up correctly
-    
-    Returns:
-        tuple: (is_valid: bool, errors: list)
-    """
-    errors = []
-    
-    # Check: Total = This Week + Last Week
-    expected_total = metrics['week1_calls'] + metrics['week2_calls']
-    if expected_total != metrics['total_calls']:
-        errors.append(
-            f"Total mismatch: {metrics['week1_calls']} + {metrics['week2_calls']} "
-            f"= {expected_total} != {metrics['total_calls']}"
-        )
-    
-    # Check: This Week = Retail + Trade + Abandoned
-    this_week_retail = metrics['week1_retail_total']
-    this_week_trade = metrics['week1_trade_total']
-    this_week_abd = metrics.get('week1_retail_abandoned', 0) + metrics.get('week1_trade_abandoned', 0)
-    this_week_calc = this_week_retail + this_week_trade + this_week_abd
-    
-    if this_week_calc != metrics['week1_calls']:
-        errors.append(
-            f"This Week breakdown mismatch: {this_week_retail} + {this_week_trade} + {this_week_abd} "
-            f"= {this_week_calc} != {metrics['week1_calls']}"
-        )
-    
-    # Check: Last Week = Retail + Trade + Abandoned
-    last_week_retail = metrics['week2_retail_total']
-    last_week_trade = metrics['week2_trade_total']
-    last_week_abd = metrics.get('week2_retail_abandoned', 0) + metrics.get('week2_trade_abandoned', 0)
-    last_week_calc = last_week_retail + last_week_trade + last_week_abd
-    
-    if last_week_calc != metrics['week2_calls']:
-        errors.append(
-            f"Last Week breakdown mismatch: {last_week_retail} + {last_week_trade} + {last_week_abd} "
-            f"= {last_week_calc} != {metrics['week2_calls']}"
-        )
-    
-    return (len(errors) == 0, errors)
+1. **Arithmetic** – Retail + Trade + Abandoned == Total for each week, and
+   Week 1 + Week 2 == Grand Total.
+2. **Date ranges** – No overlap between This Week and Last Week; each span is
+   exactly 7 days.
+3. **Historical consistency** – The current "Last Week" figures match what
+   was recorded as "This Week" in the previous report (loaded from the JSON
+   log).  Mismatches are surfaced as warnings rather than hard errors.
+
+The public entry point is :func:`validate_report`, which chains all three
+checks and returns a Markdown summary string plus a boolean pass/fail flag.
+"""
 
 import json
 import os
+from datetime import datetime
 
-def validate_historical_consistency(metrics):
-    """
-    Compare current 'Last Week' metrics against historical 'This Week' metrics.
-    
+
+# ---------------------------------------------------------------------------
+# Check 1: Arithmetic
+# ---------------------------------------------------------------------------
+
+
+def validate_arithmetic(metrics: dict) -> tuple[bool, list[str]]:
+    """Verify that all numeric sub-totals add up correctly.
+
+    Checks:
+        * ``week1_retail_total + week1_trade_total + week1_abandoned == week1_calls``
+        * ``week2_retail_total + week2_trade_total + week2_abandoned == week2_calls``
+        * ``week1_calls + week2_calls == total_calls``
+
+    Args:
+        metrics: The metrics dict returned by ``analyze_calls`` (and possibly
+            modified by ``generate_report``'s historical override).
+
     Returns:
-        tuple: (is_valid: bool, errors: list)
+        A tuple ``(passed, errors)`` where ``passed`` is ``True`` when all
+        checks succeed and ``errors`` is a list of human-readable failure
+        messages.
     """
-    errors = []
-    warnings = []
-    
-    history_file = os.path.join('reports', 'historical_weeks.json')
-    if not os.path.exists(history_file):
-        return (True, []) # No history to validate against
-        
-    try:
-        with open(history_file, 'r') as f:
-            history = json.load(f)
-            
-        reports = history.get('reports', [])
-        
-        # Current 'Last Week' dates
-        current_last_start = metrics['last_week_start']
-        current_last_end = metrics['last_week_end']
-        
-        # Find matching week in history (where it was 'This Week')
-        match = None
-        for r in reports:
-            # We look for a report where 'this_week' matches our 'last_week' dates
-            tw = r.get('this_week', {})
-            if tw.get('start_date') == current_last_start and tw.get('end_date') == current_last_end:
-                match = tw
-                break
-        
-        if match:
-            # Validate Key Metrics
-            # Allow for small variance? Or strict? 
-            # Given the user's issue, we want STRICT reporting of differences, but maybe not block execution.
-            
-            # Helper to check metric
-            def check_metric(name, current_val, historic_val):
-                if current_val != historic_val:
-                    diff = current_val - historic_val
-                    msg = (f"Historical Mismatch for {name}: Current={current_val}, "
-                           f"Historical={historic_val} (Diff: {diff:+d})")
-                    warnings.append(msg)
+    errors: list[str] = []
 
-            # Check Total
-            check_metric("Total Calls", metrics['week2_calls'], match.get('total', 0))
-            
-            # Check Retail
-            check_metric("Retail Calls", metrics['week2_retail_total'], match.get('retail', 0))
-            
-            # Check Trade
-            check_metric("Trade Calls", metrics['week2_trade_total'], match.get('trade', 0))
-            
-            # Check Abandoned
-            # Note: Abandoned metric key varies in history depending on version
-            # History usually stores just 'abandoned'.
-            current_abd = metrics.get('week2_retail_abandoned', 0) + metrics.get('week2_trade_abandoned', 0)
-            check_metric("Abandoned Calls", current_abd, match.get('abandoned', 0))
-            
-        else:
-            # No matching history found - this is fine for new data
-            pass
-            
-    except Exception as e:
-        errors.append(f"Error validating history: {e}")
-        
-    # We treat mismatches as warnings (return True) but populate errors list if severe?
-    # User said "verify everything and that remains the same".
-    # So if there is a mismatch, we should probably output it clearly.
-    
-    return (True, warnings) # Return as warnings to avoid crashing report, but will appear in summary
+    expected_total = metrics["week1_calls"] + metrics["week2_calls"]
+    if expected_total != metrics["total_calls"]:
+        errors.append(
+            f"Total mismatch: {metrics['week1_calls']} + {metrics['week2_calls']}"
+            f" = {expected_total} != {metrics['total_calls']}"
+        )
 
-def validate_date_ranges(metrics):
-    """
-    Verify no date overlap between weeks
-    
+    for week, label in ((1, "This Week"), (2, "Last Week")):
+        retail = metrics[f"week{week}_retail_total"]
+        trade = metrics[f"week{week}_trade_total"]
+        abd = metrics.get(f"week{week}_retail_abandoned", 0) + metrics.get(
+            f"week{week}_trade_abandoned", 0
+        )
+        calc = retail + trade + abd
+        total = metrics[f"week{week}_calls"]
+        if calc != total:
+            errors.append(
+                f"{label} breakdown mismatch: {retail} + {trade} + {abd}"
+                f" = {calc} != {total}"
+            )
+
+    return (len(errors) == 0, errors)
+
+
+# ---------------------------------------------------------------------------
+# Check 2: Date ranges
+# ---------------------------------------------------------------------------
+
+
+def validate_date_ranges(metrics: dict) -> tuple[bool, list[str]]:
+    """Verify that the two week windows do not overlap and are exactly 7 days.
+
+    Args:
+        metrics: The metrics dict (requires ``this_week_start``,
+            ``this_week_end``, ``last_week_start``, ``last_week_end`` as
+            ``YYYY-MM-DD`` strings).
+
     Returns:
-        tuple: (is_valid: bool, errors: list)
+        A tuple ``(passed, errors)`` where ``passed`` is ``True`` when all
+        checks succeed.
     """
-    errors = []
-    
-    this_week_start = datetime.strptime(metrics['this_week_start'], '%Y-%m-%d')
-    this_week_end = datetime.strptime(metrics['this_week_end'], '%Y-%m-%d')
-    last_week_start = datetime.strptime(metrics['last_week_start'], '%Y-%m-%d')
-    last_week_end = datetime.strptime(metrics['last_week_end'], '%Y-%m-%d')
-    
-    # Check: Last Week ends BEFORE This Week starts (no overlap)
-    if last_week_end >= this_week_start:
+    errors: list[str] = []
+
+    def _parse(key: str) -> datetime:
+        return datetime.strptime(metrics[key], "%Y-%m-%d")
+
+    this_start = _parse("this_week_start")
+    this_end = _parse("this_week_end")
+    last_start = _parse("last_week_start")
+    last_end = _parse("last_week_end")
+
+    if last_end >= this_start:
         errors.append(
             f"Week overlap detected:\n"
             f"  Last Week: {metrics['last_week_start']} to {metrics['last_week_end']}\n"
-            f"  This Week: {metrics['this_week_start']} to {metrics['this_week_end']}\n"
-            f"  Last Week should end before This Week starts!"
+            f"  This Week: {metrics['this_week_start']} to {metrics['this_week_end']}"
         )
-    
-    # Check: Weeks are exactly 7 days
-    this_week_days = (this_week_end - this_week_start).days + 1
-    last_week_days = (last_week_end - last_week_start).days + 1
-    
-    if this_week_days != 7:
-        errors.append(f"This Week is {this_week_days} days (should be 7)")
-    
-    if last_week_days != 7:
-        errors.append(f"Last Week is {last_week_days} days (should be 7)")
-    
+
+    this_days = (this_end - this_start).days + 1
+    last_days = (last_end - last_start).days + 1
+    if this_days != 7:
+        errors.append(f"This Week spans {this_days} days (expected 7)")
+    if last_days != 7:
+        errors.append(f"Last Week spans {last_days} days (expected 7)")
+
     return (len(errors) == 0, errors)
 
-def generate_verification_report(metrics):
-    """
-    Generate a detailed markdown verification report.
-    """
-    report = []
-    report.append("# Report Verification Summary")
-    report.append(f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    report.append("")
-    
-    report.append("## 1. Data Integrity Checks")
-    
-    # Arithmetic Check
-    this_week_calc = metrics['week1_retail_total'] + metrics['week1_trade_total'] + \
-                     metrics.get('week1_retail_abandoned', 0) + metrics.get('week1_trade_abandoned', 0)
-    
-    last_week_calc = metrics['week2_retail_total'] + metrics['week2_trade_total'] + \
-                     metrics.get('week2_retail_abandoned', 0) + metrics.get('week2_trade_abandoned', 0)
-    
-    total_calc = this_week_calc + last_week_calc
-    
-    errors = []
-    if this_week_calc != metrics['week1_calls']: errors.append(f"This Week Mismatch: {this_week_calc} vs {metrics['week1_calls']}")
-    if last_week_calc != metrics['week2_calls']: errors.append(f"Last Week Mismatch: {last_week_calc} vs {metrics['week2_calls']}")
-    if total_calc != metrics['total_calls']: errors.append(f"Total Call Mismatch: {total_calc} vs {metrics['total_calls']}")
 
-    if not errors:
-        report.append("- [x] **Arithmetic Consistency**: PASSED (All sub-components sum correctly to totals)")
+# ---------------------------------------------------------------------------
+# Check 3: Historical consistency
+# ---------------------------------------------------------------------------
+
+
+def validate_historical_consistency(metrics: dict) -> tuple[bool, list[str]]:
+    """Compare current Last Week figures against the historical JSON log.
+
+    Reads ``reports/historical_weeks.json`` and finds the entry where
+    ``this_week.start_date`` matches the current ``last_week_start``.  Any
+    numeric differences are returned as *warnings* (non-fatal) so the report
+    still generates even if data has been corrected after the fact.
+
+    Args:
+        metrics: The metrics dict containing ``last_week_start``,
+            ``last_week_end``, and the ``week2_*`` metric fields.
+
+    Returns:
+        A tuple ``(True, warnings)`` — always ``True`` because mismatches are
+        treated as warnings, not hard errors.  ``warnings`` is an empty list
+        when everything matches.
+    """
+    warnings: list[str] = []
+
+    history_file = os.path.join("reports", "historical_weeks.json")
+    if not os.path.exists(history_file):
+        return (True, [])
+
+    try:
+        with open(history_file, encoding="utf-8") as f:
+            history = json.load(f)
+
+        current_last_start = metrics["last_week_start"]
+        current_last_end = metrics["last_week_end"]
+
+        # Find the report where this period was recorded as "This Week".
+        match = next(
+            (
+                r["this_week"]
+                for r in history.get("reports", [])
+                if r.get("this_week", {}).get("start_date") == current_last_start
+                and r.get("this_week", {}).get("end_date") == current_last_end
+            ),
+            None,
+        )
+
+        if match:
+            checks = [
+                ("Total Calls", metrics["week2_calls"], match.get("total", 0)),
+                ("Retail Calls", metrics["week2_retail_total"], match.get("retail", 0)),
+                ("Trade Calls", metrics["week2_trade_total"], match.get("trade", 0)),
+                (
+                    "Abandoned Calls",
+                    metrics.get("week2_retail_abandoned", 0)
+                    + metrics.get("week2_trade_abandoned", 0),
+                    match.get("abandoned", 0),
+                ),
+            ]
+            for name, current_val, historic_val in checks:
+                if current_val != historic_val:
+                    diff = current_val - historic_val
+                    warnings.append(
+                        f"Historical mismatch — {name}: current={current_val}, "
+                        f"historical={historic_val} (diff {diff:+d})"
+                    )
+
+    except Exception as exc:
+        warnings.append(f"Could not validate history: {exc}")
+
+    return (True, warnings)
+
+
+# ---------------------------------------------------------------------------
+# Markdown report generation
+# ---------------------------------------------------------------------------
+
+
+def generate_verification_report(metrics: dict) -> tuple[str, bool]:
+    """Build a detailed Markdown verification summary for the current report.
+
+    Runs all three validation checks, formats the results into a Markdown
+    document, and returns it together with the overall pass/fail flag.
+
+    Args:
+        metrics: The fully resolved metrics dict (post-historical-override).
+
+    Returns:
+        A tuple ``(markdown_text, passed)`` where ``passed`` is ``True`` only
+        when arithmetic and date-range checks both pass (historical warnings
+        do not cause a failure).
+    """
+    lines: list[str] = []
+    lines.append("# Report Verification Summary")
+    lines.append(f"**Generated:** {datetime.now():%Y-%m-%d %H:%M:%S}")
+    lines.append("")
+
+    # ---- Check 1: Arithmetic ------------------------------------------------
+    arith_ok, arith_errors = validate_arithmetic(metrics)
+    lines.append("## 1. Arithmetic Consistency")
+    if arith_ok:
+        lines.append("- [x] **PASSED** — All sub-components sum correctly to totals.")
     else:
-        report.append("- [ ] **Arithmetic Consistency**: FAILED")
-        for e in errors: report.append(f"  - {e}")
+        lines.append("- [ ] **FAILED**")
+        for err in arith_errors:
+            lines.append(f"  - {err}")
+    lines.append("")
 
-    # Week Date Check
-    report.append(f"- [x] **Week Definitions**: Verified (No overlap)")
-    report.append(f"  - This Week: {metrics['this_week_start']} to {metrics['this_week_end']}")
-    report.append(f"  - Last Week: {metrics['last_week_start']} to {metrics['last_week_end']}")
-    
-    report.append("")
-    report.append("## 2. Cross-Section Verification")
-    report.append("Ensuring numbers displayed in Data Cards match the Executive Summary and Plots.")
-    
-    report.append("| Metric | Data Cards | Exec Summary | Plot (Day Breakdown) | Status |")
-    report.append("|---|---|---|---|---|")
-    
-    def verify_row(label, card_val, summary_val, plot_val):
-        match = (card_val == summary_val) and (card_val == plot_val)
-        status = "✅ MATCH" if match else "❌ MISMATCH"
-        return f"| {label} | {card_val} | {summary_val} | {plot_val} | {status} |"
+    # ---- Check 2: Date ranges -----------------------------------------------
+    date_ok, date_errors = validate_date_ranges(metrics)
+    lines.append("## 2. Date Ranges")
+    if date_ok:
+        lines.append(
+            f"- [x] **PASSED** — No overlap; each week is exactly 7 days.\n"
+            f"  - This Week: {metrics['this_week_start']} to {metrics['this_week_end']}\n"
+            f"  - Last Week: {metrics['last_week_start']} to {metrics['last_week_end']}"
+        )
+    else:
+        lines.append("- [ ] **FAILED**")
+        for err in date_errors:
+            lines.append(f"  - {err}")
+    lines.append("")
 
-    # Since we strictly used plot_derived_metrics to populate 'metrics', 
-    # the card_val and plot_val are identical by definition in the code.
-    # However, for the report, we show them explicitly.
-    
-    # This Week
-    report.append(verify_row("This Week Total", metrics['week1_calls'], metrics['week1_calls'], metrics['week1_calls']))
-    report.append(verify_row("This Week Retail", metrics['week1_retail_total'], metrics['week1_retail_total'], metrics['week1_retail_total']))
-    report.append(verify_row("This Week Trade", metrics['week1_trade_total'], metrics['week1_trade_total'], metrics['week1_trade_total']))
-    report.append(verify_row("This Week Abandoned", metrics['week1_abandoned_total'], metrics['week1_abandoned_total'], metrics['week1_abandoned_total']))
-    
-    # Last Week
-    report.append(verify_row("Last Week Total", metrics['week2_calls'], metrics['week2_calls'], metrics['week2_calls']))
-    report.append(verify_row("Last Week Retail", metrics['week2_retail_total'], metrics['week2_retail_total'], metrics['week2_retail_total']))
-    report.append(verify_row("Last Week Trade", metrics['week2_trade_total'], metrics['week2_trade_total'], metrics['week2_trade_total']))
-    report.append(verify_row("Last Week Abandoned", metrics['week2_abandoned_total'], metrics['week2_abandoned_total'], metrics['week2_abandoned_total']))
-
-    report.append("")
-    report.append("## 3. Abandoned Calls by Day of Week Plot Verification")
-    report.append("Verifying that the sum of the days in the 'Abandoned Calls by Day of Week' plot equals the total abandoned calls reported.")
-    report.append(f"- **This Week Plot Total**: {metrics['week1_abandoned_total']}")
-    report.append(f"- **This Week Report Total**: {metrics['week1_abandoned_total']}")
-    report.append(f"- **Status**: ✅ MATCH")
-    
-    report.append("")
-    report.append("## 4. Report Metrics Breakdown")
-    
-    # THIS WEEK
-    w1_retail = metrics['week1_retail_total']
-    w1_trade = metrics['week1_trade_total']
-    w1_abd = metrics.get('week1_retail_abandoned', 0) + metrics.get('week1_trade_abandoned', 0)
-    w1_total = metrics['week1_calls']
-    
-    report.append("### THIS WEEK")
-    report.append(f"Uses Main Log ({metrics['this_week_start']} to {metrics['this_week_end']}) + Abandoned Log ({metrics['this_week_start']} to {metrics['this_week_end']})")
-    report.append("")
-    report.append(f"**Retail:** {w1_retail:,}")
-    report.append(f"**Trade:** {w1_trade:,}")
-    report.append(f"**Abandoned:** {w1_abd:,}")
-    report.append(f"**TOTAL:** {w1_total:,}")
-    report.append(f"**Calculation Verified:** {w1_retail:,} + {w1_trade:,} + {w1_abd:,} = {w1_total:,} {'✓' if (w1_retail+w1_trade+w1_abd)==w1_total else '❌'}")
-    
-    report.append("")
-    
-    # LAST WEEK
-    w2_retail = metrics['week2_retail_total']
-    w2_trade = metrics['week2_trade_total']
-    w2_abd = metrics.get('week2_retail_abandoned', 0) + metrics.get('week2_trade_abandoned', 0)
-    w2_total = metrics['week2_calls']
-    
-    report.append("### LAST WEEK")
-    report.append(f"Uses Main Log ({metrics['last_week_start']} to {metrics['last_week_end']}) + Abandoned Log ({metrics['last_week_start']} to {metrics['last_week_end']})")
-    report.append("")
-    report.append(f"**Retail:** {w2_retail:,}")
-    report.append(f"**Trade:** {w2_trade:,}")
-    report.append(f"**Abandoned:** {w2_abd:,}")
-    report.append(f"**TOTAL:** {w2_total:,}")
-    report.append(f"**Calculation Verified:** {w2_retail:,} + {w2_trade:,} + {w2_abd:,} = {w2_total:,} {'✓' if (w2_retail+w2_trade+w2_abd)==w2_total else '❌'}")
-    
-    report.append("")
-    report.append("### OVERALL TOTAL")
-    overall_total = w1_total + w2_total
-    
-    report.append(f"**{overall_total:,} calls** ({w1_total:,} + {w2_total:,})")
-
-    report.append("")
-    report.append("## 5. Historical Consistency Check")
-    is_historically_valid, hist_warnings = validate_historical_consistency(metrics)
-    
+    # ---- Check 3: Historical consistency ------------------------------------
+    _, hist_warnings = validate_historical_consistency(metrics)
+    lines.append("## 3. Historical Consistency")
     if hist_warnings:
-        report.append("⚠️ **Warnings Detected** (Differences from previous week's report)")
+        lines.append("⚠️ **Warnings** (differences from the previous report)")
         for w in hist_warnings:
-            report.append(f"- {w}")
-        report.append("\n> Note: These differences often indicate code logic updates or new data availability.")
+            lines.append(f"- {w}")
+        lines.append(
+            "\n> Differences often reflect data corrections or code updates."
+        )
     else:
-        report.append("✅ **Consistent** (Matches historical records for this period)")
+        lines.append("✅ **Consistent** with historical records.")
+    lines.append("")
 
-    report.append("")
-    report.append("## 6. Final Result")
-    if not errors:
-        report.append("### ✅ VERIFICATION SUCCESSFUL")
-        report.append("The report is internally consistent.")
+    # ---- Detailed breakdown -------------------------------------------------
+    lines.append("## 4. Metrics Breakdown")
+    for week, label, start_key, end_key in (
+        (1, "THIS WEEK", "this_week_start", "this_week_end"),
+        (2, "LAST WEEK", "last_week_start", "last_week_end"),
+    ):
+        retail = metrics[f"week{week}_retail_total"]
+        trade = metrics[f"week{week}_trade_total"]
+        abd = metrics.get(f"week{week}_retail_abandoned", 0) + metrics.get(
+            f"week{week}_trade_abandoned", 0
+        )
+        total = metrics[f"week{week}_calls"]
+        check = "✓" if (retail + trade + abd) == total else "❌"
+        lines.append(
+            f"### {label} ({metrics[start_key]} to {metrics[end_key]})\n"
+            f"Retail: {retail:,} | Trade: {trade:,} | Abandoned: {abd:,} | "
+            f"**Total: {total:,}** {check}"
+        )
+        lines.append("")
+
+    overall_total = metrics["week1_calls"] + metrics["week2_calls"]
+    lines.append(
+        f"### OVERALL TOTAL\n{overall_total:,} calls "
+        f"({metrics['week1_calls']:,} + {metrics['week2_calls']:,})"
+    )
+    lines.append("")
+
+    # ---- Final verdict -------------------------------------------------------
+    passed = arith_ok and date_ok
+    lines.append("## 5. Final Result")
+    if passed:
+        lines.append("### ✅ VERIFICATION SUCCESSFUL")
+        lines.append("The report is internally consistent and ready for distribution.")
     else:
-        report.append("### ❌ VERIFICATION FAILED")
-        report.append("Discrepancies found. See above.")
-        
-    return "\n".join(report), not errors
+        lines.append("### ❌ VERIFICATION FAILED")
+        lines.append("Discrepancies found above.  Report generation has been aborted.")
 
-def validate_report(results):
+    return "\n".join(lines), passed
+
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+
+def validate_report(results: dict) -> tuple[str, bool]:
+    """Run all validation checks on an ``analyze_calls`` result dict.
+
+    This is the only function called by ``generate_report.py``.
+
+    Args:
+        results: The dict returned by ``analyze_calls``.  Only
+            ``results['metrics']`` is inspected.
+
+    Returns:
+        A tuple ``(markdown_text, passed)`` suitable for writing to
+        ``reports/report_verification_summary.md`` and deciding whether to
+        continue with report generation.
     """
-    Run all validation checks on report results and return Markdown report.
-    """
-    metrics = results['metrics']
-    return generate_verification_report(metrics)
+    return generate_verification_report(results["metrics"])
