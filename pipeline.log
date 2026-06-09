@@ -1,0 +1,239 @@
+2026-06-02 22:21:46  INFO      ============================================================
+2026-06-02 22:21:46  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:21:46  INFO      Run time: 2026-06-02 22:21:46
+2026-06-02 22:21:46  INFO      ============================================================
+2026-06-02 22:21:46  ERROR     Authentication failed: Failed to acquire Graph API token: AADSTS7000215: Invalid client secret provided. Ensure the secret being sent in the request is the client secret value, not the client secret ID, for a secret added to app 'f6985766-6895-4f8c-86ac-37b43e6d04bc'. Trace ID: 3ea34150-0deb-4555-95de-41cda8e30700 Correlation ID: 7e0eeba2-5845-42d4-bf9b-03f972fdd225 Timestamp: 2026-06-02 21:21:46Z
+2026-06-02 22:26:39  INFO      ============================================================
+2026-06-02 22:26:39  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:26:39  INFO      Run time: 2026-06-02 22:26:39
+2026-06-02 22:26:39  INFO      ============================================================
+2026-06-02 22:26:39  INFO      Graph API access token acquired.
+2026-06-02 22:26:39  INFO      Searching for data email from: smf_ingestion@tequila-ai.com
+2026-06-02 22:26:40  ERROR     Error fetching data email: 404 Client Error: Not Found for url: https://graph.microsoft.com/v1.0/users/insights@tequila-ai.com/messages?%24filter=from%2FemailAddress%2Faddress+eq+%27smf_ingestion%40tequila-ai.com%27+and+isRead+eq+false+and+receivedDateTime+ge+2026-05-31T00%3A00%3A00Z&%24orderby=receivedDateTime+desc&%24top=5&%24select=id%2Csubject%2CreceivedDateTime%2ChasAttachments
+2026-06-02 22:26:40  ERROR     Failed to send alert email: 404 Client Error: Not Found for url: https://graph.microsoft.com/v1.0/users/insights@tequila-ai.com/sendMail
+2026-06-02 22:27:58  INFO      ============================================================
+2026-06-02 22:27:58  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:27:58  INFO      Run time: 2026-06-02 22:27:58
+2026-06-02 22:27:58  INFO      ============================================================
+2026-06-02 22:27:58  INFO      Graph API access token acquired.
+2026-06-02 22:27:58  INFO      Searching for data email from: smf_ingestion@tequila-ai.com
+2026-06-02 22:27:58  ERROR     Error fetching data email: 400 Client Error: Bad Request for url: https://graph.microsoft.com/v1.0/users/james@tequila-ai.com/messages?%24filter=from%2FemailAddress%2Faddress+eq+%27smf_ingestion%40tequila-ai.com%27+and+isRead+eq+false+and+receivedDateTime+ge+2026-05-31T00%3A00%3A00Z&%24orderby=receivedDateTime+desc&%24top=5&%24select=id%2Csubject%2CreceivedDateTime%2ChasAttachments
+2026-06-02 22:27:58  INFO      Alert sent to james@tequila-ai.com: Data email fetch failed
+2026-06-02 22:30:51  INFO      ============================================================
+2026-06-02 22:30:51  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:30:51  INFO      Run time: 2026-06-02 22:30:51
+2026-06-02 22:30:51  INFO      ============================================================
+2026-06-02 22:30:51  INFO      Graph API access token acquired.
+2026-06-02 22:30:51  INFO      Searching for data email from: smf_ingestion@tequila-ai.com
+2026-06-02 22:30:51  WARNING   No unread data emails found from smf_ingestion@tequila-ai.com since 2026-05-31T00:00:00Z.
+2026-06-02 22:30:51  WARNING   No data email found from 'smf_ingestion@tequila-ai.com'.
+The pipeline did not run.  Please check the inbox and re-run manually.
+2026-06-02 22:30:51  INFO      Alert sent to james@tequila-ai.com: No data email found
+2026-06-02 22:32:59  INFO      ============================================================
+2026-06-02 22:32:59  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:32:59  INFO      Run time: 2026-06-02 22:32:59
+2026-06-02 22:32:59  INFO      ============================================================
+2026-06-02 22:32:59  INFO      Graph API access token acquired.
+2026-06-02 22:32:59  INFO      Searching for unread data email from: smf_ingestion@tequila-ai.com
+2026-06-02 22:32:59  WARNING   No unread data emails found from smf_ingestion@tequila-ai.com since 2026-05-31T00:00:00Z; checking recent read emails as a fallback.
+2026-06-02 22:32:59  WARNING   No data emails found from smf_ingestion@tequila-ai.com since 2026-05-31T00:00:00Z.
+2026-06-02 22:32:59  WARNING   No data email found from 'smf_ingestion@tequila-ai.com'.
+The pipeline did not run.  Please check the inbox and re-run manually.
+2026-06-02 22:32:59  INFO      Alert sent to james@tequila-ai.com: No data email found
+2026-06-02 22:37:27  INFO      ============================================================
+2026-06-02 22:37:27  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:37:27  INFO      Run time: 2026-06-02 22:37:27
+2026-06-02 22:37:27  INFO      ============================================================
+2026-06-02 22:37:27  INFO      Graph API access token acquired.
+2026-06-02 22:37:27  INFO      Searching for unread data email from: smf_ingestion@tequila-ai.com
+2026-06-02 22:37:27  WARNING   No unread data emails found from smf_ingestion@tequila-ai.com since 2026-05-31T00:00:00Z; checking recent read emails as a fallback.
+2026-06-02 22:37:27  WARNING   No data emails found from smf_ingestion@tequila-ai.com since 2026-05-31T00:00:00Z.
+2026-06-02 22:37:27  WARNING   No data email found from 'smf_ingestion@tequila-ai.com'.
+The pipeline did not run.  Please check the inbox and re-run manually.
+2026-06-02 22:37:27  INFO      Alert sent to smf_ingestion@tequila-ai.com: No data email found
+2026-06-02 22:42:44  INFO      ============================================================
+2026-06-02 22:42:44  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:42:44  INFO      Run time: 2026-06-02 22:42:44
+2026-06-02 22:42:44  INFO      ============================================================
+2026-06-02 22:42:45  INFO      Graph API access token acquired.
+2026-06-02 22:42:45  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-02 22:42:45  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:21Z)
+2026-06-02 22:42:45  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv (625,587 bytes) -> data/AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv
+2026-06-02 22:42:45  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:42:45  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:12Z)
+2026-06-02 22:42:46  INFO      Downloaded: CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv (1,168,036 bytes) -> data/CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv
+2026-06-02 22:42:46  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:42:46  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:08Z)
+2026-06-02 22:42:46  INFO      Downloaded: InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv (522,435 bytes) -> data/InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv
+2026-06-02 22:42:46  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:42:46  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:00:58Z)
+2026-06-02 22:42:46  INFO      Downloaded: AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv (1,483 bytes) -> data/AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv
+2026-06-02 22:42:46  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:42:46  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-02 22:42:46  INFO      Starting report generation...
+2026-06-02 22:43:17  INFO      Report ready: call_report_31_05_2026.html
+2026-06-02 22:43:18  INFO      Report emailed to 1 recipient(s): james@trillium.ie
+2026-06-02 22:43:18  INFO      ============================================================
+2026-06-02 22:43:18  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-02 22:43:18  INFO      ============================================================
+2026-06-02 22:54:27  INFO      ============================================================
+2026-06-02 22:54:27  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 22:54:27  INFO      Run time: 2026-06-02 22:54:27
+2026-06-02 22:54:27  INFO      ============================================================
+2026-06-02 22:54:27  INFO      Graph API access token acquired.
+2026-06-02 22:54:27  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-02 22:54:27  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:21Z)
+2026-06-02 22:54:27  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv (625,587 bytes) -> data/AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv
+2026-06-02 22:54:27  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:54:27  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:12Z)
+2026-06-02 22:54:28  INFO      Downloaded: CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv (1,168,036 bytes) -> data/CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv
+2026-06-02 22:54:28  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:54:28  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:08Z)
+2026-06-02 22:54:28  INFO      Downloaded: InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv (522,435 bytes) -> data/InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv
+2026-06-02 22:54:28  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:54:28  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:00:58Z)
+2026-06-02 22:54:28  INFO      Downloaded: AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv (1,483 bytes) -> data/AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv
+2026-06-02 22:54:28  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 22:54:28  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-02 22:54:28  INFO      Starting report generation...
+2026-06-02 22:55:02  INFO      Report ready: call_report_31_05_2026.html
+2026-06-02 22:55:02  INFO      Report emailed to 1 recipient(s): james@trillium.ie
+2026-06-02 22:55:02  INFO      ============================================================
+2026-06-02 22:55:02  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-02 22:55:02  INFO      ============================================================
+2026-06-02 23:02:27  INFO      ============================================================
+2026-06-02 23:02:27  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 23:02:27  INFO      Run time: 2026-06-02 23:02:27
+2026-06-02 23:02:27  INFO      ============================================================
+2026-06-02 23:02:27  INFO      Graph API access token acquired.
+2026-06-02 23:02:27  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-02 23:02:27  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:21Z)
+2026-06-02 23:02:27  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv (625,587 bytes) -> data/AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv
+2026-06-02 23:02:27  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:02:27  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:12Z)
+2026-06-02 23:02:28  INFO      Downloaded: CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv (1,168,036 bytes) -> data/CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv
+2026-06-02 23:02:28  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:02:28  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:08Z)
+2026-06-02 23:02:28  INFO      Downloaded: InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv (522,435 bytes) -> data/InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv
+2026-06-02 23:02:28  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:02:28  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:00:58Z)
+2026-06-02 23:02:28  INFO      Downloaded: AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv (1,483 bytes) -> data/AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv
+2026-06-02 23:02:28  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:02:28  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-02 23:02:28  INFO      Starting report generation...
+2026-06-02 23:02:59  INFO      Report ready: call_report_31_05_2026.html
+2026-06-02 23:03:00  INFO      Report emailed to 1 recipient(s): james@trillium.ie
+2026-06-02 23:03:00  INFO      ============================================================
+2026-06-02 23:03:00  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-02 23:03:00  INFO      ============================================================
+2026-06-02 23:07:06  INFO      ============================================================
+2026-06-02 23:07:06  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-02 23:07:06  INFO      Run time: 2026-06-02 23:07:06
+2026-06-02 23:07:06  INFO      ============================================================
+2026-06-02 23:07:06  INFO      Graph API access token acquired.
+2026-06-02 23:07:06  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-02 23:07:06  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:21Z)
+2026-06-02 23:07:06  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv (625,587 bytes) -> data/AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv
+2026-06-02 23:07:07  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:07:07  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:12Z)
+2026-06-02 23:07:07  INFO      Downloaded: CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv (1,168,036 bytes) -> data/CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv
+2026-06-02 23:07:07  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:07:07  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:08Z)
+2026-06-02 23:07:07  INFO      Downloaded: InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv (522,435 bytes) -> data/InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv
+2026-06-02 23:07:07  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:07:07  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:00:58Z)
+2026-06-02 23:07:07  INFO      Downloaded: AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv (1,483 bytes) -> data/AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv
+2026-06-02 23:07:07  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-02 23:07:07  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-02 23:07:07  INFO      Starting report generation...
+2026-06-02 23:07:38  INFO      Report ready: call_report_31_05_2026.html
+2026-06-02 23:07:38  INFO      Report emailed to 1 recipient(s): james@trillium.ie
+2026-06-02 23:07:38  INFO      ============================================================
+2026-06-02 23:07:38  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-02 23:07:38  INFO      ============================================================
+2026-06-03 13:57:34  INFO      ============================================================
+2026-06-03 13:57:34  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-03 13:57:34  INFO      Run time: 2026-06-03 13:57:34
+2026-06-03 13:57:34  INFO      ============================================================
+2026-06-03 13:57:34  INFO      Graph API access token acquired.
+2026-06-03 13:57:34  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-03 13:57:35  WARNING   No unread data emails found from noreply@3cx.net since 2026-06-01T00:00:00Z; checking recent read emails as a fallback.
+2026-06-03 13:57:35  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:21Z)
+2026-06-03 13:57:35  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv (625,587 bytes) -> data/AbandonedCallslastweekdrop20sec_0106_OGRbfhQKgsvOD77aKEZs.csv
+2026-06-03 13:57:35  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:12Z)
+2026-06-03 13:57:35  INFO      Downloaded: CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv (1,168,036 bytes) -> data/CallLogLastWeek_0106_ZCXzLao4H9Rd70VMy6p9.csv
+2026-06-03 13:57:35  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:01:08Z)
+2026-06-03 13:57:35  INFO      Downloaded: InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv (522,435 bytes) -> data/InboundCallsLastWeek_0106_A7g4kyRUKWcxiazIOIuw.csv
+2026-06-03 13:57:35  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-01T22:00:58Z)
+2026-06-03 13:57:35  INFO      Downloaded: AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv (1,483 bytes) -> data/AgentPerformance_0106_8IRUTnTXGwpr3hLxJ1MM.csv
+2026-06-03 13:57:35  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-03 13:57:35  INFO      Starting report generation...
+2026-06-03 13:58:14  INFO      Report ready: call_report_31_05_2026.html
+2026-06-03 13:58:15  INFO      Report emailed to 1 recipient(s): paul@tequila-ai.com
+2026-06-03 13:58:15  INFO      ============================================================
+2026-06-03 13:58:15  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-03 13:58:15  INFO      ============================================================
+2026-06-09 10:16:53  INFO      ============================================================
+2026-06-09 10:16:53  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-09 10:16:53  INFO      Run time: 2026-06-09 10:16:53
+2026-06-09 10:16:53  INFO      ============================================================
+2026-06-09 10:16:53  INFO      Graph API access token acquired.
+2026-06-09 10:16:53  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-09 10:16:54  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:15Z)
+2026-06-09 10:16:54  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0806_uL62vWFiEIrjOvJGwDub.csv (569,582 bytes) -> data/AbandonedCallslastweekdrop20sec_0806_uL62vWFiEIrjOvJGwDub.csv
+2026-06-09 10:16:54  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-09 10:16:54  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:08Z)
+2026-06-09 10:16:54  INFO      Downloaded: CallLogLastWeek_0806_Xd3jKrWmSJnjJMrOLEmD.csv (1,049,352 bytes) -> data/CallLogLastWeek_0806_Xd3jKrWmSJnjJMrOLEmD.csv
+2026-06-09 10:16:54  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-09 10:16:54  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:05Z)
+2026-06-09 10:16:55  INFO      Downloaded: InboundCallsLastWeek_0806_OVjkeLR16oUDEVB2bWQh.csv (476,046 bytes) -> data/InboundCallsLastWeek_0806_OVjkeLR16oUDEVB2bWQh.csv
+2026-06-09 10:16:55  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-09 10:16:55  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:00:51Z)
+2026-06-09 10:16:55  INFO      Downloaded: AgentPerformance_0806_R551PUn1aeHBsxyeeozb.csv (1,484 bytes) -> data/AgentPerformance_0806_R551PUn1aeHBsxyeeozb.csv
+2026-06-09 10:16:55  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-09 10:16:55  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-09 10:16:55  INFO      Starting report generation...
+2026-06-09 10:18:01  INFO      ============================================================
+2026-06-09 10:18:01  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-09 10:18:01  INFO      Run time: 2026-06-09 10:18:01
+2026-06-09 10:18:01  INFO      ============================================================
+2026-06-09 10:18:01  INFO      Graph API access token acquired.
+2026-06-09 10:18:01  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-09 10:18:02  WARNING   No unread data emails found from noreply@3cx.net since 2026-06-07T00:00:00Z; checking recent read emails as a fallback.
+2026-06-09 10:18:02  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:15Z)
+2026-06-09 10:18:02  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0806_uL62vWFiEIrjOvJGwDub.csv (569,582 bytes) -> data/AbandonedCallslastweekdrop20sec_0806_uL62vWFiEIrjOvJGwDub.csv
+2026-06-09 10:18:02  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:08Z)
+2026-06-09 10:18:03  INFO      Downloaded: CallLogLastWeek_0806_Xd3jKrWmSJnjJMrOLEmD.csv (1,049,352 bytes) -> data/CallLogLastWeek_0806_Xd3jKrWmSJnjJMrOLEmD.csv
+2026-06-09 10:18:03  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:05Z)
+2026-06-09 10:18:03  INFO      Downloaded: InboundCallsLastWeek_0806_OVjkeLR16oUDEVB2bWQh.csv (476,046 bytes) -> data/InboundCallsLastWeek_0806_OVjkeLR16oUDEVB2bWQh.csv
+2026-06-09 10:18:03  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:00:51Z)
+2026-06-09 10:18:03  INFO      Downloaded: AgentPerformance_0806_R551PUn1aeHBsxyeeozb.csv (1,484 bytes) -> data/AgentPerformance_0806_R551PUn1aeHBsxyeeozb.csv
+2026-06-09 10:18:03  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-09 10:18:03  INFO      Starting report generation...
+2026-06-09 10:19:03  INFO      Report ready: call_report_07_06_2026.html
+2026-06-09 10:19:04  INFO      Report emailed to 1 recipient(s): paul@tequila-ai.com
+2026-06-09 10:19:04  INFO      ============================================================
+2026-06-09 10:19:04  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-09 10:19:04  INFO      ============================================================
+2026-06-09 10:19:45  INFO      ============================================================
+2026-06-09 10:19:45  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-09 10:19:45  INFO      Run time: 2026-06-09 10:19:45
+2026-06-09 10:19:45  INFO      ============================================================
+2026-06-09 10:19:45  INFO      Graph API access token acquired.
+2026-06-09 10:19:45  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-09 10:19:45  WARNING   No unread data emails found from noreply@3cx.net since 2026-06-07T00:00:00Z; checking recent read emails as a fallback.
+2026-06-09 10:19:45  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:15Z)
+2026-06-09 10:19:45  INFO      Downloaded: AbandonedCallslastweekdrop20sec_0806_uL62vWFiEIrjOvJGwDub.csv (569,582 bytes) -> data/AbandonedCallslastweekdrop20sec_0806_uL62vWFiEIrjOvJGwDub.csv
+2026-06-09 10:19:45  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:08Z)
+2026-06-09 10:19:46  INFO      Downloaded: CallLogLastWeek_0806_Xd3jKrWmSJnjJMrOLEmD.csv (1,049,352 bytes) -> data/CallLogLastWeek_0806_Xd3jKrWmSJnjJMrOLEmD.csv
+2026-06-09 10:19:46  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:01:05Z)
+2026-06-09 10:19:46  INFO      Downloaded: InboundCallsLastWeek_0806_OVjkeLR16oUDEVB2bWQh.csv (476,046 bytes) -> data/InboundCallsLastWeek_0806_OVjkeLR16oUDEVB2bWQh.csv
+2026-06-09 10:19:46  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-08T22:00:51Z)
+2026-06-09 10:19:46  INFO      Downloaded: AgentPerformance_0806_R551PUn1aeHBsxyeeozb.csv (1,484 bytes) -> data/AgentPerformance_0806_R551PUn1aeHBsxyeeozb.csv
+2026-06-09 10:19:46  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-09 10:19:46  INFO      Starting report generation...
+2026-06-09 10:20:39  INFO      Report ready: call_report_07_06_2026.html
+2026-06-09 10:20:40  INFO      Report emailed to 1 recipient(s): paul@tequila-ai.com
+2026-06-09 10:20:40  INFO      ============================================================
+2026-06-09 10:20:40  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-09 10:20:40  INFO      ============================================================

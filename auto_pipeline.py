@@ -50,6 +50,8 @@ TENANT_ID = os.getenv("AZURE_TENANT_ID")
 CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
 USER_EMAIL = os.getenv("MS_USER_EMAIL")
+DATA_MAILBOX = os.getenv("DATA_MAILBOX", USER_EMAIL)
+SEND_MAILBOX = os.getenv("SEND_MAILBOX", USER_EMAIL)
 DATA_SOURCE = os.getenv("DATA_SOURCE_EMAIL")
 RECIPIENTS = [r.strip() for r in os.getenv("REPORT_RECIPIENTS", "").split(",") if r.strip()]
 
@@ -125,6 +127,8 @@ def graph_get(token: str, url: str, params: dict | None = None) -> dict:
     """
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
     response = requests.get(url, headers=headers, params=params, timeout=30)
+    if not response.ok:
+        log.error("Graph GET failed: %s", response.text)
     response.raise_for_status()
     return response.json()
 
@@ -174,24 +178,36 @@ def fetch_data_attachments(token: str) -> bool:
     since = (datetime.now(timezone.utc) - timedelta(days=2)).strftime(
         "%Y-%m-%dT00:00:00Z"
     )
-    params = {
-        "$filter": (
-            f"from/emailAddress/address eq '{DATA_SOURCE}' "
-            f"and isRead eq false "
-            f"and receivedDateTime ge {since}"
-        ),
-        "$orderby": "receivedDateTime desc",
-        "$top": "5",
-        "$select": "id,subject,receivedDateTime,hasAttachments",
-    }
+    def search_messages(unread_only: bool) -> list[dict]:
+        filter_parts = [
+            f"receivedDateTime ge {since}",
+            f"from/emailAddress/address eq '{DATA_SOURCE}'",
+        ]
+        if unread_only:
+            filter_parts.append("isRead eq false")
 
-    log.info(f"Searching for data email from: {DATA_SOURCE}")
-    messages = graph_get(
-        token, f"{GRAPH_BASE}/users/{USER_EMAIL}/messages", params=params
-    ).get("value", [])
+        params = {
+            "$filter": " and ".join(filter_parts),
+            "$orderby": "receivedDateTime desc",
+            "$top": "5",
+            "$select": "id,subject,receivedDateTime,hasAttachments,isRead",
+        }
+        return graph_get(
+            token, f"{GRAPH_BASE}/users/{DATA_MAILBOX}/messages", params=params
+        ).get("value", [])
+
+    log.info(f"Searching for unread data email from: {DATA_SOURCE}")
+    messages = search_messages(unread_only=True)
 
     if not messages:
-        log.warning(f"No unread data emails found from {DATA_SOURCE} since {since}.")
+        log.warning(
+            f"No unread data emails found from {DATA_SOURCE} since {since}; "
+            "checking recent read emails as a fallback."
+        )
+        messages = search_messages(unread_only=False)
+
+    if not messages:
+        log.warning(f"No data emails found from {DATA_SOURCE} since {since}.")
         return False
 
     message = messages[0]
@@ -205,7 +221,7 @@ def fetch_data_attachments(token: str) -> bool:
 
     attachments = graph_get(
         token,
-        f"{GRAPH_BASE}/users/{USER_EMAIL}/messages/{message_id}/attachments",
+        f"{GRAPH_BASE}/users/{DATA_MAILBOX}/messages/{message_id}/attachments",
     ).get("value", [])
 
     if not attachments:
@@ -229,20 +245,129 @@ def fetch_data_attachments(token: str) -> bool:
         log.error("No attachments could be downloaded.")
         return False
 
-    # Mark as read.
-    requests.patch(
-        f"{GRAPH_BASE}/users/{USER_EMAIL}/messages/{message_id}",
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-        json={"isRead": True},
-        timeout=30,
-    )
-    log.info(f"Marked email as read: '{subject}'")
+    if not message.get("isRead"):
+        # Mark as read.
+        requests.patch(
+            f"{GRAPH_BASE}/users/{DATA_MAILBOX}/messages/{message_id}",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            json={"isRead": True},
+            timeout=30,
+        )
+        log.info(f"Marked email as read: '{subject}'")
     return True
 
 
 # ---------------------------------------------------------------------------
 # Step 2: Run the report
 # ---------------------------------------------------------------------------
+
+
+def fetch_data_attachments(token: str) -> bool:
+    """Download call-log attachments from recent data emails.
+
+    The 3CX reports arrive as several separate emails, so this processes all
+    matching messages in the recent window rather than only the newest one.
+    """
+    since = (datetime.now(timezone.utc) - timedelta(days=2)).strftime(
+        "%Y-%m-%dT00:00:00Z"
+    )
+
+    def search_messages(unread_only: bool) -> list[dict]:
+        filter_parts = [
+            f"receivedDateTime ge {since}",
+            f"from/emailAddress/address eq '{DATA_SOURCE}'",
+        ]
+        if unread_only:
+            filter_parts.append("isRead eq false")
+
+        params = {
+            "$filter": " and ".join(filter_parts),
+            "$orderby": "receivedDateTime desc",
+            "$top": "10",
+            "$select": "id,subject,receivedDateTime,hasAttachments,isRead",
+        }
+        return graph_get(
+            token, f"{GRAPH_BASE}/users/{DATA_MAILBOX}/messages", params=params
+        ).get("value", [])
+
+    log.info(f"Searching for unread data emails from: {DATA_SOURCE}")
+    messages = search_messages(unread_only=True)
+
+    if not messages:
+        log.warning(
+            f"No unread data emails found from {DATA_SOURCE} since {since}; "
+            "checking recent read emails as a fallback."
+        )
+        messages = search_messages(unread_only=False)
+
+    if not messages:
+        log.warning(f"No data emails found from {DATA_SOURCE} since {since}.")
+        return False
+
+    DATA_DIR.mkdir(exist_ok=True)
+    downloaded = 0
+
+    for message in messages:
+        message_id = message["id"]
+        subject = message.get("subject", "(no subject)")
+        log.info(
+            f"Found email: '{subject}' "
+            f"(received {message.get('receivedDateTime', '')})"
+        )
+
+        if not message.get("hasAttachments"):
+            log.warning(f"Email has no attachments: '{subject}'")
+            continue
+
+        attachments = graph_get(
+            token,
+            f"{GRAPH_BASE}/users/{DATA_MAILBOX}/messages/{message_id}/attachments",
+        ).get("value", [])
+
+        if not attachments:
+            log.warning(f"No attachments returned for email: '{subject}'")
+            continue
+
+        message_downloaded = 0
+        for att in attachments:
+            name = att.get("name", "attachment")
+            content_bytes = att.get("contentBytes")
+            if not content_bytes:
+                log.warning(f"Attachment '{name}' has no content - skipping.")
+                continue
+
+            dest = DATA_DIR / name
+            dest.write_bytes(base64.b64decode(content_bytes))
+            log.info(
+                f"Downloaded: {name} ({dest.stat().st_size:,} bytes) -> data/{name}"
+            )
+            downloaded += 1
+            message_downloaded += 1
+
+        if message_downloaded and not message.get("isRead"):
+            response = requests.patch(
+                f"{GRAPH_BASE}/users/{DATA_MAILBOX}/messages/{message_id}",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                },
+                json={"isRead": True},
+                timeout=30,
+            )
+            if response.ok:
+                log.info(f"Marked email as read: '{subject}'")
+            else:
+                log.warning(f"Could not mark email as read: {response.text}")
+
+    if downloaded == 0:
+        log.error("No attachments could be downloaded.")
+        return False
+
+    log.info(f"Downloaded {downloaded} attachment(s) from {len(messages)} email(s).")
+    return True
 
 
 def run_report() -> Path | None:
@@ -300,12 +425,12 @@ def send_report_email(
 
     body_html = (
         "<html><body style=\"font-family:Arial,sans-serif;color:#333;\">"
-        "<p>Hi all,</p>"
+        "<p>Hi,</p>"
         f"<p>Please find the weekly call performance report for the period ending "
         f"{today} attached.</p>"
         f"{f'<p>{metrics_summary}</p>' if metrics_summary else ''}"
         "<p>Please reach out if you have any questions.</p>"
-        "<p>Kind regards</p>"
+        "<br><br>"
         "</body></html>"
     )
 
@@ -325,7 +450,7 @@ def send_report_email(
         },
         "saveToSentItems": True,
     }
-    graph_post(token, f"{GRAPH_BASE}/users/{USER_EMAIL}/sendMail", payload)
+    graph_post(token, f"{GRAPH_BASE}/users/{SEND_MAILBOX}/sendMail", payload)
     log.info(f"Report emailed to {len(RECIPIENTS)} recipient(s): {', '.join(RECIPIENTS)}")
 
 
@@ -344,13 +469,13 @@ def send_alert_email(token: str, subject: str, body_text: str) -> None:
         "message": {
             "subject": f"[ALERT] Call Log Pipeline: {subject}",
             "body": {"contentType": "Text", "content": body_text},
-            "toRecipients": [{"emailAddress": {"address": USER_EMAIL}}],
+            "toRecipients": [{"emailAddress": {"address": SEND_MAILBOX}}],
         },
         "saveToSentItems": False,
     }
     try:
-        graph_post(token, f"{GRAPH_BASE}/users/{USER_EMAIL}/sendMail", payload)
-        log.info(f"Alert sent to {USER_EMAIL}: {subject}")
+        graph_post(token, f"{GRAPH_BASE}/users/{SEND_MAILBOX}/sendMail", payload)
+        log.info(f"Alert sent to {SEND_MAILBOX}: {subject}")
     except Exception as exc:
         log.error(f"Failed to send alert email: {exc}")
 
@@ -378,7 +503,8 @@ def run_pipeline() -> None:
         "AZURE_TENANT_ID": TENANT_ID,
         "AZURE_CLIENT_ID": CLIENT_ID,
         "AZURE_CLIENT_SECRET": CLIENT_SECRET,
-        "MS_USER_EMAIL": USER_EMAIL,
+        "DATA_MAILBOX": DATA_MAILBOX,
+        "SEND_MAILBOX": SEND_MAILBOX,
         "DATA_SOURCE_EMAIL": DATA_SOURCE,
         "REPORT_RECIPIENTS": RECIPIENTS,
     }

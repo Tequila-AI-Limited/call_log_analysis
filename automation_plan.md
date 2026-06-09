@@ -1,220 +1,321 @@
-# Weekly Call Log Report — Automation Plan
+# Weekly Call Log Report - Automation Plan
 
 ## Overview
 
-This document outlines the plan to fully automate the weekly call log reporting workflow — from receiving the source data email, running the report, through to delivering it to stakeholders — with zero manual steps.
+This document describes the working automation setup for the weekly call log report. The goal is to remove the manual steps of downloading the 3CX CSV attachments, moving them into `data/`, running the report, and emailing the finished HTML report.
 
----
+The current `auto_pipeline.py` has been tested manually and can:
 
-## Current vs Automated Workflow
+1. Authenticate to Microsoft Graph.
+2. Read the mailbox where 3CX sends the report files.
+3. Download the CSV attachments into `data/`.
+4. Run `generate_report.py`.
+5. Send the generated HTML report by email.
+6. Write an audit trail to `pipeline.log`.
 
-| Step | Current (Manual) | Automated |
-|---|---|---|
-| Receive data email | ✅ Arrives automatically | ✅ Arrives automatically |
-| Download attachments | ❌ Manual download | ✅ Script fetches via Graph API |
-| Move files to `data/` | ❌ Manual | ✅ Script saves directly |
-| Run `generate_report.py` | ❌ Manual | ✅ Called automatically |
-| Email report to stakeholders | ❌ Manual | ✅ Script sends via Graph API |
-| Error alerts | ❌ None | ✅ Alert email sent to you |
-| Audit log | ❌ None | ✅ Written to `pipeline.log` |
+## Confirmed Email Roles
 
----
+The pipeline now separates the three email roles clearly:
 
-## End-to-End Automated Pipeline
+```env
+DATA_MAILBOX=smf_ingestion@tequila-ai.com
+SEND_MAILBOX=james@tequila-ai.com
+DATA_SOURCE_EMAIL=noreply@3cx.net
+REPORT_RECIPIENTS=james@trillium.ie
+```
 
-![Automated pipeline workflow](C:\Users\irish\.gemini\antigravity\brain\f4891027-574c-4d1c-843c-23b567b430da\pipeline_workflow_1777387177097.png)
+`DATA_MAILBOX` is the mailbox the script checks for incoming 3CX data emails.
+
+`SEND_MAILBOX` is the mailbox the script uses to send the finished report.
+
+`DATA_SOURCE_EMAIL` is the sender address on the incoming 3CX emails.
+
+`REPORT_RECIPIENTS` is the list of people who receive the generated report.
+
+In testing, the incoming 3CX emails were:
+
+- From: `noreply@3cx.net`
+- To: `smf_ingestion@tequila-ai.com`
+- Subject: `3CX: Your Scheduled Reports are ready`
+- Attachments: one CSV per email, across several emails
+
+The final report email was successfully sent from:
+
+- From: `james@tequila-ai.com`
+- To: `james@trillium.ie`
+
+## Recommended Hosting Option
+
+The preferred option is to run this on the company server using Windows Task Scheduler.
+
+This is better than running it on a personal PC because the server is more likely to be on, connected, backed up, and managed consistently. It also keeps the report data and credentials inside company infrastructure.
+
+Ask IT whether the server can run a weekly Python scheduled task with:
+
+- Python installed.
+- A local copy of this GitHub repository.
+- Dependencies installed from `requirements.txt`.
+- Outbound HTTPS access to Microsoft Graph.
+- Access to the reporting database, if required by the report pipeline.
+- A local `.env` file containing Microsoft Graph and database credentials.
+- Windows Task Scheduler configured to run `python auto_pipeline.py`.
+
+## Alternative Options
+
+### Option 1 - Company Server
+
+Recommended.
+
+Pros:
+
+- Most reliable operational setup.
+- Keeps sensitive call data on company infrastructure.
+- Works with the current Python script.
+- Can use a local `.env` file that is not committed to Git.
+- Easy to schedule with Windows Task Scheduler.
+
+Cons:
+
+- Requires IT/server access.
+- Server must have Python and the required network/database access.
+
+### Option 2 - Personal PC
+
+Good for short-term testing only.
+
+Pros:
+
+- Fastest to set up.
+- Already proven manually.
+- No GitHub Actions or server setup needed.
+
+Cons:
+
+- Only runs if the PC is on, awake, online, and logged/configured correctly.
+- OneDrive paths can cause occasional file lock or sync issues.
+- Not ideal for production reporting.
+
+### Option 3 - GitHub Actions
+
+Possible, but not the first choice.
+
+Pros:
+
+- Can run on a weekly schedule without a local machine.
+- Logs are available in GitHub.
+- No server scheduling needed.
+
+Cons:
+
+- Call data and report outputs may contain sensitive customer/call information.
+- Microsoft Graph secrets and database credentials would need to be stored as GitHub Actions secrets.
+- GitHub runners may not be able to reach the reporting database if it is private or IP-restricted.
+- Generated `data/` and `reports/` files would need a clear storage plan: email only, artifact upload, or commit back to the repo.
+- GitHub scheduled workflows can be delayed.
+
+Use GitHub Actions only if IT confirms the data/security position is acceptable and the database/network requirements can be met.
+
+## Current Pipeline
 
 ```mermaid
 flowchart LR
-    A["🗓️ Tuesday 8:00am GMT"] --> B["⏰ Windows\nTask Scheduler"]
-    B --> C["🐍 auto_pipeline.py"]
-    C --> D["📧 Fetch Data Email\nfrom M365 Inbox\nvia Graph API"]
-    D --> E["💾 Save Attachments\nto data/ folder"]
-    E --> F["⚙️ generate_report.py\nruns automatically"]
-    F --> G{"Validation\nPassed?"}
-    G -- Yes --> H["📄 HTML Report\nGenerated"]
-    G -- No --> I["🚨 Alert Email\nSent to You"]
-    H --> J["📤 Email Report\nto Distribution List\nvia Graph API"]
-    J --> K["✅ Done\nLogged to pipeline.log"]
-
-    style A fill:#1a1a2e,color:#00d4ff
-    style B fill:#16213e,color:#00d4ff
-    style C fill:#0f3460,color:#fff
-    style D fill:#533483,color:#fff
-    style E fill:#533483,color:#fff
-    style F fill:#0f3460,color:#fff
-    style G fill:#e94560,color:#fff
-    style H fill:#1a7a4a,color:#fff
-    style I fill:#e94560,color:#fff
-    style J fill:#533483,color:#fff
-    style K fill:#1a7a4a,color:#fff
+    A["3CX emails arrive"] --> B["auto_pipeline.py"]
+    B --> C["Read DATA_MAILBOX via Graph"]
+    C --> D["Find emails from DATA_SOURCE_EMAIL"]
+    D --> E["Download CSV attachments to data/"]
+    E --> F["Run generate_report.py"]
+    F --> G["Create HTML report"]
+    G --> H["Send from SEND_MAILBOX"]
+    H --> I["Recipients receive report"]
+    B --> J["Write pipeline.log"]
 ```
 
----
+## `.env` Configuration
 
-## Schedule
+The Microsoft Graph and pipeline settings should be stored locally in `.env`.
 
-```mermaid
-gantt
-    title Weekly Automation Timeline
-    dateFormat  HH:mm
-    axisFormat  %H:%M
-
-    section Monday Night
-    Data email arrives from source    :milestone, 23:00, 0m
-
-    section Tuesday Morning
-    Task Scheduler triggers pipeline  :active, 08:00, 5m
-    Fetch email + download files      :08:00, 2m
-    Generate report                   :08:02, 5m
-    Email report to stakeholders      :08:07, 1m
-    Done — stakeholders receive report :milestone, 08:08, 0m
-```
-
----
-
-## Components
-
-### `auto_pipeline.py` (already built ✅)
-
-The main script handles the full pipeline end-to-end:
-
-```
-auto_pipeline.py
-├── get_access_token()          — Authenticate with Microsoft Graph API
-├── fetch_data_attachments()    — Find email, download CSVs to data/
-├── run_report()                — Call generate_report.py
-├── send_report_email()         — Email HTML report to distribution list
-├── send_alert_email()          — Alert you if anything goes wrong
-└── run_pipeline()              — Orchestrates all of the above
-```
-
-### Error Handling Flow
-
-```mermaid
-flowchart TD
-    A[Pipeline Starts] --> B{Auth OK?}
-    B -- No --> Z1[🚨 Log error + stop]
-    B -- Yes --> C{Data email\nfound?}
-    C -- No --> Z2[🚨 Alert email:\nNo data email found]
-    C -- Yes --> D{Attachments\ndownloaded?}
-    D -- No --> Z3[🚨 Alert email:\nDownload failed]
-    D -- Yes --> E{Report\ngenerated OK?}
-    E -- No --> Z4[🚨 Alert email:\nReport failed]
-    E -- Yes --> F{Report email\nsent OK?}
-    F -- No --> Z5[🚨 Alert email:\nDelivery failed]
-    F -- Yes --> G[✅ Pipeline complete\nLogged to pipeline.log]
-
-    style G fill:#1a7a4a,color:#fff
-    style Z1 fill:#c0392b,color:#fff
-    style Z2 fill:#c0392b,color:#fff
-    style Z3 fill:#c0392b,color:#fff
-    style Z4 fill:#c0392b,color:#fff
-    style Z5 fill:#c0392b,color:#fff
-```
-
----
-
-## Setup Guide
-
-### Step 1 — Azure App Registration
-
-![Azure App Registration Steps](C:\Users\irish\.gemini\antigravity\brain\f4891027-574c-4d1c-843c-23b567b430da\azure_setup_steps_1777387569846.png)
-
-This is a one-time setup that gives the script secure access to your M365 mailbox.
-
-1. Go to [portal.azure.com](https://portal.azure.com) and sign in with your Trillium Capital M365 account
-2. Navigate to **Azure Active Directory** → **App registrations** → **New registration**
-3. Name it: `Call Log Report Automation` → click **Register**
-4. From the app's **Overview** page, copy:
-   - **Application (client) ID**
-   - **Directory (tenant) ID**
-5. Go to **API permissions** → **Add a permission** → **Microsoft Graph** → **Application permissions**
-   - Add `Mail.Read`
-   - Add `Mail.Send`
-6. Click **Grant admin consent for [your organisation]**
-7. Go to **Certificates & secrets** → **New client secret** → set expiry → copy the **Value**
-
-> [!IMPORTANT]
-> If Trillium Capital has an IT department managing Azure AD, you will need to ask them to grant admin consent in Step 6. This is a standard, routine request — just share this document with them.
-
-> [!CAUTION]
-> The client secret value is only shown once. Copy it immediately and store it securely in your `.env` file.
-
----
-
-### Step 2 — Update `.env` File
-
-Add these 6 variables to your existing `.env` file (alongside your existing DB credentials):
+Do not commit `.env` to Git.
 
 ```env
-# Microsoft Graph API — Call Log Automation
+# Microsoft Graph API - Call Log Automation
 AZURE_TENANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 AZURE_CLIENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 AZURE_CLIENT_SECRET=your-client-secret-value-here
-MS_USER_EMAIL=your.name@trilliumcapital.com
 
-# Pipeline config
-DATA_SOURCE_EMAIL=sender@data-source.com
-REPORT_RECIPIENTS=person1@example.com,person2@example.com,person3@example.com
+# Mailbox roles
+DATA_MAILBOX=smf_ingestion@tequila-ai.com
+SEND_MAILBOX=james@tequila-ai.com
+DATA_SOURCE_EMAIL=noreply@3cx.net
+REPORT_RECIPIENTS=james@trillium.ie
+
+# Legacy fallback used by older script versions
+MS_USER_EMAIL=smf_ingestion@tequila-ai.com
 ```
 
----
+Important: `AZURE_CLIENT_SECRET` must be the client secret **Value**, not the Secret ID.
 
-### Step 3 — Test the Script Manually
+## Microsoft Graph Permissions
 
-Before scheduling, run it once manually to verify everything works:
+The Entra app registration is named:
+
+```text
+Call Log Report Automation
+```
+
+Required Microsoft Graph application permissions:
+
+- `Mail.Read`
+- `Mail.Send`
+
+These are application permissions because the job runs unattended.
+
+Security recommendation for IT: restrict the application to only the mailboxes it needs:
+
+- `smf_ingestion@tequila-ai.com` for reading incoming data emails.
+- `james@tequila-ai.com` for sending report emails.
+
+If IT cannot scope permissions exactly this way, they should confirm the acceptable security model before the automation is scheduled.
+
+## Server Setup Checklist for IT
+
+1. Choose the server where the scheduled job should run.
+2. Install Python 3.11+ or confirm an existing compatible Python installation.
+3. Clone or copy this repository to the server.
+4. Create a virtual environment.
+5. Install dependencies:
 
 ```powershell
-cd "C:\Users\irish\OneDrive - Trillium Capital Ltd\Documents\GitHub\call_log_analysis"
+pip install -r requirements.txt
+```
+
+6. Create a local `.env` file with the Graph, mailbox, recipient, and database settings.
+7. Run a manual test:
+
+```powershell
 python auto_pipeline.py
 ```
 
-Check `pipeline.log` for a detailed record of what happened.
+8. Confirm `pipeline.log` shows:
 
----
-
-### Step 4 — Windows Task Scheduler
-
-Set up a scheduled task to run the pipeline automatically every Tuesday at 8am.
-
-**Option A — Using the GUI:**
-1. Open **Task Scheduler** (search in Start menu)
-2. Click **Create Basic Task** → Name: `Call Log Report Pipeline`
-3. Trigger: **Weekly** → **Tuesday** → Start time: `08:00:00`
-4. Action: **Start a program**
-   - Program: `python`
-   - Arguments: `auto_pipeline.py`
-   - Start in: `C:\Users\irish\OneDrive - Trillium Capital Ltd\Documents\GitHub\call_log_analysis`
-5. ✅ Check **Run whether user is logged in or not**
-6. ✅ Check **Run with highest privileges**
-
-**Option B — I can generate a ready-to-import `.xml` file** for Task Scheduler — just ask.
-
----
-
-## File Structure After Setup
-
-```
-call_log_analysis/
-├── auto_pipeline.py        ← New: full automation script
-├── generate_report.py      ← Existing: called automatically by pipeline
-├── store_snapshot.py       ← Existing: called by generate_report.py
-├── weekly_data_manager.py  ← Existing: database management
-├── pipeline.log            ← New: created on first run, audit trail
-├── .env                    ← Updated: add the 6 new Graph API variables
-└── data/
-    └── *.csv               ← Auto-populated each Tuesday by the pipeline
+```text
+PIPELINE COMPLETED SUCCESSFULLY
 ```
 
----
+9. Confirm the report email is received.
+10. Create a weekly Windows Task Scheduler task.
 
-## Open Questions
+## Suggested Schedule
 
-> [!IMPORTANT]
-> Before we go live, please confirm:
-> 1. **IT-managed Azure AD?** — Do you need IT admin to grant consent in Step 1?
-> 2. **Data source email** — What is the exact sender address the data files come from?
-> 3. **Distribution list** — Please provide the recipient email addresses for `REPORT_RECIPIENTS`
-> 4. **Your M365 email** — Confirm the exact address for `MS_USER_EMAIL`
-> 5. **Task Scheduler XML** — Would you like me to generate the ready-to-import XML file?
+The 3CX emails currently arrive on Monday evening around 22:00 UTC.
+
+Recommended scheduled run:
+
+```text
+Tuesday 08:00 local time
+```
+
+This gives the source emails time to arrive before the report job starts.
+
+## Windows Task Scheduler Settings
+
+Suggested task:
+
+```text
+Name: Call Log Report Pipeline
+Trigger: Weekly, Tuesday, 08:00
+Action: Start a program
+Program: python
+Arguments: auto_pipeline.py
+Start in: <server path to call_log_analysis repo>
+```
+
+Recommended options:
+
+- Run whether user is logged on or not.
+- Run with highest privileges if required by the server policy.
+- Configure the task to retry if it fails.
+- Keep task history enabled.
+
+## Current Known Issue
+
+The script successfully reads and downloads attachments, but Microsoft Graph returned `ErrorAccessDenied` when trying to mark the 3CX emails as read.
+
+This is not blocking the report because downloaded files with the same filenames are overwritten. However, because the messages stay unread, the script may reprocess the same emails on later runs.
+
+Recommended hardening before final production scheduling:
+
+- Add a local processed-message log, for example `processed_messages.json`.
+- Store each processed Graph message ID.
+- Skip message IDs that have already been processed.
+- Keep overwriting same-name attachment files in `data/`, but avoid repeatedly downloading old emails.
+
+This avoids asking IT for broader write permission such as `Mail.ReadWrite`.
+
+## File Overwrite Behavior
+
+When the same email attachments are read again, the script saves them to the same path in `data/`.
+
+Current behavior:
+
+```text
+Same filename -> overwritten
+Different filename -> added as another file
+```
+
+Because 3CX filenames include dates and random suffixes, old historical files can accumulate in `data/`. This matches the existing report pipeline, which reads historical files from `data/`.
+
+If the same weekly data is resent with a new random filename, the pipeline may treat it as an additional source file unless the report-level deduplication handles the records. The processed-message log is the cleaner prevention.
+
+## Validation Commands
+
+Run these after code changes or server setup:
+
+```powershell
+python auto_pipeline.py
+python diagnose_mailbox.py
+python diagnose_sent_mail.py
+python sanity/verify_data_integrity.py
+python sanity/test_core_logic.py
+python sanity/verify_metrics.py
+```
+
+For syntax without writing OneDrive `__pycache__` files:
+
+```powershell
+python - <<'PY'
+from pathlib import Path
+for file_name in ["auto_pipeline.py", "diagnose_mailbox.py", "diagnose_sent_mail.py"]:
+    compile(Path(file_name).read_text(encoding="utf-8"), file_name, "exec")
+print("syntax ok")
+PY
+```
+
+## Questions for IT
+
+Send IT these questions:
+
+```text
+Can we run a weekly Python scheduled task on the company server for the call log report automation?
+
+It needs:
+- Python installed.
+- Access to this GitHub repo or a local copy of it.
+- Outbound HTTPS access to Microsoft Graph.
+- Access to the reporting database, if the report uses one.
+- A local .env file containing Microsoft Graph and DB credentials.
+- Windows Task Scheduler weekly run, ideally Tuesday morning after the 3CX emails arrive.
+
+The script reads 3CX CSV attachments from:
+smf_ingestion@tequila-ai.com
+
+The incoming data emails come from:
+noreply@3cx.net
+
+The script sends the final report from:
+james@tequila-ai.com
+
+The report is currently sent to:
+james@trillium.ie
+
+Please confirm whether the Microsoft Graph app can be restricted to only the required read/send mailboxes.
+```
