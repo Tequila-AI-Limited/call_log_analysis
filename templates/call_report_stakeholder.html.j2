@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Southside Weekly Call Performance Report</title>
+    <style>
+        :root {
+            --ink: #1f2933;
+            --muted: #607080;
+            --line: #d9e2e8;
+            --surface: #ffffff;
+            --page: #f4f7f8;
+            --teal: #116466;
+            --blue: #2f6f9f;
+            --green: #227a4f;
+            --red: #b8423f;
+            --amber: #a96500;
+            --soft-teal: #e7f3f2;
+            --soft-red: #f8e9e8;
+            --soft-amber: #fff3df;
+            --soft-green: #e8f4ed;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--page);
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.45;
+        }
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+            background: var(--surface);
+            min-height: 100vh;
+        }
+        .header {
+            background: #17324d;
+            color: #fff;
+            padding: 22px 18px;
+        }
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo {
+            width: 84px;
+            max-width: 26vw;
+            height: auto;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            line-height: 1.15;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+        .header p {
+            margin: 6px 0 0;
+            color: #dce8f2;
+            font-size: 14px;
+        }
+        .content { padding: 18px; }
+        .section { margin: 0 0 28px; }
+        .section-title {
+            margin: 0 0 12px;
+            font-size: 20px;
+            line-height: 1.2;
+            border-bottom: 2px solid var(--line);
+            padding-bottom: 8px;
+        }
+        .summary-band {
+            background: var(--soft-teal);
+            border-left: 5px solid var(--teal);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .summary-band h2 {
+            margin: 0 0 8px;
+            font-size: 20px;
+        }
+        .summary-meta {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        ul.clean-list {
+            margin: 0;
+            padding-left: 19px;
+        }
+        ul.clean-list li { margin: 0 0 8px; }
+        .recommendations {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(17, 100, 102, 0.25);
+        }
+        .recommendations h3 {
+            margin: 0 0 8px;
+            font-size: 15px;
+            text-transform: uppercase;
+            color: var(--teal);
+        }
+        .movement-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--line);
+            font-size: 14px;
+        }
+        .movement-table th,
+        .movement-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+        }
+        .movement-table th {
+            background: #eef3f6;
+            color: #354756;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .pill {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .good { color: var(--green); background: var(--soft-green); }
+        .bad { color: var(--red); background: var(--soft-red); }
+        .neutral { color: #596875; background: #eef2f4; }
+        .risk { color: var(--red); background: var(--soft-red); }
+        .watch { color: var(--amber); background: var(--soft-amber); }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .metric-card,
+        .flag-card,
+        .confidence-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 14px;
+            background: #fff;
+        }
+        .metric-label {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .metric-value {
+            margin: 5px 0;
+            color: var(--blue);
+            font-size: 30px;
+            line-height: 1;
+            font-weight: 700;
+        }
+        .metric-subtext {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .flag-grid,
+        .confidence-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .flag-card h3 {
+            margin: 8px 0 5px;
+            font-size: 16px;
+        }
+        .flag-card p,
+        .confidence-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .chart-container {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px;
+            overflow-x: auto;
+            background: #fff;
+        }
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+        }
+        table.detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px;
+            font-size: 14px;
+        }
+        .detail-table th,
+        .detail-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+        }
+        .detail-table th {
+            background: #17324d;
+            color: #fff;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .detail-table tr:nth-child(even) td { background: #f8fafb; }
+        .note {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 9px 0 0;
+        }
+        .footer {
+            padding: 18px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            border-top: 1px solid var(--line);
+        }
+
+        @media (max-width: 720px) {
+            .container { width: 100%; }
+            .header { padding: 18px 14px; }
+            .header-row { align-items: flex-start; }
+            .logo { width: 64px; }
+            h1 { font-size: 20px; }
+            .content { padding: 14px; }
+            .card-grid,
+            .model-grid,
+            .flag-grid,
+            .confidence-grid { grid-template-columns: 1fr; }
+            .movement-table { font-size: 13px; }
+            .movement-table th,
+            .movement-table td { padding: 8px 6px; }
+            .metric-value { font-size: 28px; }
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-row">
+                <img class="logo" src="https://tequila-ai.com/wp-content/uploads/2025/06/logo-no-background.png" alt="Tequila AI logo">
+                <div>
+                    <h1>Weekly Call Performance Report</h1>
+                    <p>Week ending {{ metrics.max_date }}. Generated {{ generated_at }}.</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <section class="summary-band">
+                <h2>Executive Summary</h2>
+                <p class="summary-meta">{{ metrics.this_week_start }} – {{ metrics.this_week_end }}</p>
+                <ul class="clean-list">
+                    {% for item in executive_summary.summary %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+                <div class="recommendations">
+                    <h3>Recommended Actions</h3>
+                    <ul class="clean-list">
+                        {% for item in executive_summary.recommendations %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">This Week vs Last Week</h2>
+                <table class="movement-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>This Week</th>
+                            <th>Last Week</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in movements %}
+                        <tr>
+                            <td>{{ row.label }}</td>
+                            <td><strong>{{ row.value }}</strong></td>
+                            <td>{{ row.previous }}</td>
+                            <td><span class="pill {{ row.change.status }}">{{ row.change.label }} / {{ row.change.pct_label }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Needs Attention</h2>
+                <div class="flag-grid">
+                    {% for flag in attention_flags %}
+                    <div class="flag-card">
+                        <span class="pill {{ flag.level }}">{{ flag.level|upper }}</span>
+                        <h3>{{ flag.title }}</h3>
+                        <p>{{ flag.detail }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Key Performance Indicators</h2>
+                <div class="card-grid">
+                    {% for card in kpi_cards %}
+                    <div class="metric-card">
+                        <div class="metric-label">{{ card.label }}</div>
+                        <div class="metric-value">{{ card.value }}</div>
+                        <p class="metric-subtext">{{ card.subtext }}</p>
+                        <span class="pill {{ card.change.status }}">{{ card.change.label }} vs last week</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Chart Takeaways</h2>
+                <ul class="clean-list">
+                    {% for item in chart_takeaways %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+                <div class="chart-container">
+                    {{ plots.combined_plot|safe }}
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Trade Customer Follow-Up</h2>
+                {% if followups %}
+                <div class="table-wrap">
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>This Week</th>
+                                <th>Most Recent</th>
+                                <th>Last Week</th>
+                                <th>Suggested Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in followups %}
+                            <tr>
+                                <td>{{ item.customer_name }}</td>
+                                <td>{{ item.phone }}</td>
+                                <td>{{ item.count }}</td>
+                                <td>{{ item.most_recent }}</td>
+                                <td>{{ item.previous_count }}</td>
+                                <td>{{ item.action }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No named abandoned trade customers were identified for this week.</p>
+                {% endif %}
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Data Confidence</h2>
+                <div class="confidence-grid">
+                    {% for item in data_confidence %}
+                    <div class="confidence-card">
+                        <div class="metric-label">{{ item.label }}</div>
+                        <p><strong>{{ item.value }}</strong></p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Call Log Sample</h2>
+                <div class="table-wrap">
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Call ID</th>
+                                <th>Call Start</th>
+                                <th>From Number</th>
+                                <th>Customer Type</th>
+                                <th>Talking Sec</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for index, row in raw_data.iterrows() %}
+                            <tr>
+                                <td>Week {{ row['week'] }}</td>
+                                <td>{{ row['Call ID'] }}</td>
+                                <td>{{ row['call_start'] }}</td>
+                                <td>{{ row['from_number'] }}</td>
+                                <td>{{ row['customer_type']|title }}</td>
+                                <td>{{ row['talking_total_sec'] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">Showing a sample only. CSV downloads remain in the production report.</p>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">Abandoned Call Sample</h2>
+                {% if abandoned_logs|length %}
+                <div class="table-wrap">
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Call Time</th>
+                                <th>Caller ID</th>
+                                <th>Customer Type</th>
+                                <th>Waiting Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for index, row in abandoned_logs.iterrows() %}
+                            <tr>
+                                <td>Week {{ row['week'] }}</td>
+                                <td>{{ row['Call Time'] }}</td>
+                                <td>{{ row['Caller ID'] }}</td>
+                                <td>{{ row['customer_type']|title }}</td>
+                                <td>{{ row['Waiting Time'] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No abandoned call rows available.</p>
+                {% endif %}
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Southside Call Centre &mdash; Weekly Performance Report &mdash; Generated {{ generated_at }}</p>
+        </footer>
+    </div>
+</body>
+</html>

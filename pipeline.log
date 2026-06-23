@@ -237,3 +237,56 @@ The pipeline did not run.  Please check the inbox and re-run manually.
 2026-06-09 10:20:40  INFO      ============================================================
 2026-06-09 10:20:40  INFO      PIPELINE COMPLETED SUCCESSFULLY
 2026-06-09 10:20:40  INFO      ============================================================
+2026-06-16 23:15:49  INFO      ============================================================
+2026-06-16 23:15:49  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-16 23:15:49  INFO      Run time: 2026-06-16 23:15:49
+2026-06-16 23:15:49  INFO      ============================================================
+2026-06-16 23:15:50  INFO      Graph API access token acquired.
+2026-06-16 23:15:50  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-16 23:15:50  WARNING   No unread data emails found from noreply@3cx.net since 2026-06-14T00:00:00Z; checking recent read emails as a fallback.
+2026-06-16 23:15:50  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-15T22:01:10Z)
+2026-06-16 23:15:50  INFO      Downloaded: AbandonedCallslastweekdrop20sec_1506_yapTVSx1aLtINbH4Cwh2.csv (606,608 bytes) -> data/AbandonedCallslastweekdrop20sec_1506_yapTVSx1aLtINbH4Cwh2.csv
+2026-06-16 23:15:50  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-15T22:01:04Z)
+2026-06-16 23:15:51  INFO      Downloaded: CallLogLastWeek_1506_PaVRlTAjPadvoXN26qUD.csv (1,161,210 bytes) -> data/CallLogLastWeek_1506_PaVRlTAjPadvoXN26qUD.csv
+2026-06-16 23:15:51  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-15T22:00:58Z)
+2026-06-16 23:15:51  INFO      Downloaded: InboundCallsLastWeek_1506_Sv4pz6QPKPCpEv85hdod.csv (521,418 bytes) -> data/InboundCallsLastWeek_1506_Sv4pz6QPKPCpEv85hdod.csv
+2026-06-16 23:15:51  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-15T22:00:50Z)
+2026-06-16 23:15:51  INFO      Downloaded: AgentPerformance_1506_N59k4PgQun28ka8jPuGk.csv (1,485 bytes) -> data/AgentPerformance_1506_N59k4PgQun28ka8jPuGk.csv
+2026-06-16 23:15:51  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-16 23:15:51  INFO      Starting report generation...
+2026-06-16 23:16:36  INFO      Report ready: call_report_14_06_2026.html
+2026-06-16 23:16:37  INFO      Report emailed to 1 recipient(s): paul@tequila-ai.com
+2026-06-16 23:16:37  INFO      ============================================================
+2026-06-16 23:16:37  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-16 23:16:37  INFO      ============================================================
+2026-06-23 11:28:06  INFO      ============================================================
+2026-06-23 11:28:06  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-23 11:28:06  INFO      Run time: 2026-06-23 11:28:06
+2026-06-23 11:28:06  INFO      ============================================================
+2026-06-23 11:28:18  WARNING   Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NameResolutionError("HTTPSConnection(host='login.microsoftonline.com', port=443): Failed to resolve 'login.microsoftonline.com' ([Errno 11001] getaddrinfo failed)")': /0bc6d6b8-842d-4ae7-ab01-c2148a46ddd2/v2.0/.well-known/openid-configuration
+2026-06-23 11:28:30  ERROR     Authentication failed: HTTPSConnectionPool(host='login.microsoftonline.com', port=443): Max retries exceeded with url: /0bc6d6b8-842d-4ae7-ab01-c2148a46ddd2/v2.0/.well-known/openid-configuration (Caused by NameResolutionError("HTTPSConnection(host='login.microsoftonline.com', port=443): Failed to resolve 'login.microsoftonline.com' ([Errno 11001] getaddrinfo failed)"))
+2026-06-23 11:28:37  INFO      ============================================================
+2026-06-23 11:28:37  INFO      CALL LOG REPORT PIPELINE — STARTING
+2026-06-23 11:28:37  INFO      Run time: 2026-06-23 11:28:37
+2026-06-23 11:28:37  INFO      ============================================================
+2026-06-23 11:28:38  INFO      Graph API access token acquired.
+2026-06-23 11:28:38  INFO      Searching for unread data emails from: noreply@3cx.net
+2026-06-23 11:28:38  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-22T22:00:41Z)
+2026-06-23 11:28:38  INFO      Downloaded: InboundCallsLastWeek_2206_9VjAHnyWVa64clNDLnky.csv (473,432 bytes) -> data/InboundCallsLastWeek_2206_9VjAHnyWVa64clNDLnky.csv
+2026-06-23 11:28:38  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-23 11:28:38  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-22T22:00:41Z)
+2026-06-23 11:28:39  INFO      Downloaded: AbandonedCallslastweekdrop20sec_2206_SxBpi9UZIGe4nvC7ly0P.csv (325,272 bytes) -> data/AbandonedCallslastweekdrop20sec_2206_SxBpi9UZIGe4nvC7ly0P.csv
+2026-06-23 11:28:39  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-23 11:28:39  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-22T22:00:40Z)
+2026-06-23 11:28:39  INFO      Downloaded: CallLogLastWeek_2206_Ufs62rt7EPme8oJQtni3.csv (1,069,034 bytes) -> data/CallLogLastWeek_2206_Ufs62rt7EPme8oJQtni3.csv
+2026-06-23 11:28:39  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-23 11:28:39  INFO      Found email: '3CX: Your Scheduled Reports are ready' (received 2026-06-22T22:00:37Z)
+2026-06-23 11:28:39  INFO      Downloaded: AgentPerformance_2206_Ox4IDm5PwqHnRGPwH83U.csv (1,485 bytes) -> data/AgentPerformance_2206_Ox4IDm5PwqHnRGPwH83U.csv
+2026-06-23 11:28:39  WARNING   Could not mark email as read: {"error":{"code":"ErrorAccessDenied","message":"Access is denied. Check credentials and try again."}}
+2026-06-23 11:28:39  INFO      Downloaded 4 attachment(s) from 4 email(s).
+2026-06-23 11:28:39  INFO      Starting report generation...
+2026-06-23 11:29:20  INFO      Report ready: call_report_21_06_2026.html
+2026-06-23 11:29:20  INFO      Report emailed to 1 recipient(s): paul@tequila-ai.com
+2026-06-23 11:29:20  INFO      ============================================================
+2026-06-23 11:29:20  INFO      PIPELINE COMPLETED SUCCESSFULLY
+2026-06-23 11:29:20  INFO      ============================================================
